@@ -15,6 +15,7 @@ class Point(np.ndarray):
         :param cls:
         :param input_array: Defaults to 2d origin
         """
+
         obj = np.asarray(input_array).view(cls)
         return obj
 
@@ -54,41 +55,44 @@ class Point(np.ndarray):
         return np.linalg.norm(self - other)
 
 
+class Points(np.ndarray):
+    def __new__(cls, list_of_points):
+        """
+        :param cls:
+        :param list_of_points: needs multiple points or ndarrays
+        """
+        obj = np.vstack(list_of_points).view(cls)
+        return obj
+
+    def translate(self, x=0, y=0):
+        points_copy = np.append(self, np.zeros((self.shape[0], 1)), axis=1)
+
+        t = np.array([[1, 0, x],
+                      [0, 1, y],
+                      [0, 0, 1]])
+
+        translation = points_copy @ t
+        print(f'{translation}')
+        self = translation[:, 0:2]
+        return self
+
+
+
 class Line:
     """
-    n-dimensional line used for locations.
-    > p1 = line([1, 2], [3, 4])
+    n-dimensional point used for locations.
+    inherits +, -, * (as dot-product)
+    > p1 = Point([1, 2])
     > p2 = Point([4, 5])
     > p1 + p2
     Point([5, 7])
     """
-    def __new__(cls, input_array=(0, 0)):
-        """
-        :param cls:
-        :param input_array: Defaults to 2d origin
-        """
-        obj = np.asarray(input_array).view(cls)
-        return obj
-
-    @property
-    def x(self):
-        return self[0]
-
-    @property
-    def y(self):
-        return self[1]
-
-    @property
-    def z(self):
-        """
-        :return: 3rd dimension element. 0 if not defined
-        """
-        try:
-            return self[2]
-        except IndexError:
-            return 0
     def __init__(self, point_1=Point([0, 0]), point_2=Point([0, 0])):
         self.line = np.concatenate((point_1, point_2), axis=0)
+
+
+
+
 
 
 def test():
@@ -118,12 +122,20 @@ def test():
 
 
 if __name__ == "__main__":
-    v1 = Point([1, 2, 3])
-    v2 = Point([4, 5, 7])
-    v3 = Point([4, ])
-    sum12 = Point([5, 7, 10])
-    dot12 = Point([4, 10, 21])
+    v1 = Point([1, 2])
+    v2 = Point([1, 5])
+    v3 = Point([1, 0])
 
-    line = Line(v1, v2)
 
-    print(line)
+    scale = np.array([[2, 0],
+                      [0, 1]])
+
+    print(v1.x)
+
+    points = Points([v1, v2, v3])
+    print(points)
+
+    # scaled = points @ scale
+    # print(scaled)
+
+    print('translation: ', points.translate(x=5, y=5))
