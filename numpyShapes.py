@@ -1,5 +1,16 @@
 import numpy as np
+from typing import get_type_hints
 
+
+def to_point(method):
+    def wrapper(*args):
+        hints = get_type_hints(method)
+        print(f'{hints=}')
+        print(args)
+        # for arg, arg_type in args:
+        result = method(*args)
+        return result
+    return wrapper
 
 class Point(np.ndarray):
     """
@@ -61,81 +72,65 @@ class Points(np.ndarray):
         :param cls:
         :param list_of_points: needs multiple points or ndarrays
         """
-        obj = np.vstack(list_of_points).view(cls)
+        if type(list_of_points) == 'numpy.ndarray':
+            obj = list_of_points
+        else:
+            obj = np.vstack(list_of_points).view(cls)
         return obj
 
-    def translate(self, x=0, y=0):
-        points_copy = np.append(self, np.zeros((self.shape[0], 1)), axis=1)
+    @classmethod
+    @to_point
+    def translate(cls, points, offset: Point = Point([0, 0])):
+        points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
+        a = np.array([[1, 0, offset.x],
+                      [0, 1, offset.y],
+                      [0, 0,     1   ]])
 
-        t = np.array([[1, 0, x],
-                      [0, 1, y],
-                      [0, 0, 1]])
+        result = points @ a.T
+        return result[:, 0:2].view(cls)
 
-        translation = points_copy @ t
-        print(f'{translation}')
-        self = translation[:, 0:2]
-        return self
+    @classmethod
+    def scale(cls, points, scale:Point = Point([1,1])):
+        points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
+        a = np.array([[scale[0],     0,     0],
+                      [  0,       scale[1], 0],
+                      [  0,         0,     1]])
 
+        result = points @ a.T
+        return result[:, 0:2].view(cls)
 
+    @classmethod
+    def rotate(cls, points, angle, origin:Point = Point([0, 0])):
+        cos = np.cos(angle)
+        sin = np.sin(angle)
 
-class Line:
-    """
-    n-dimensional point used for locations.
-    inherits +, -, * (as dot-product)
-    > p1 = Point([1, 2])
-    > p2 = Point([4, 5])
-    > p1 + p2
-    Point([5, 7])
-    """
-    def __init__(self, point_1=Point([0, 0]), point_2=Point([0, 0])):
-        self.line = np.concatenate((point_1, point_2), axis=0)
+        a = np.array([[cos, -sin, 0],
+                      [sin, cos,  0],
+                      [0,   0,    1]])
 
+        if origin == [0, 0]:
+            points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
+            print('rotate about origin')
+        else:
+            print('rotate about: {}'.format(origin))
+            points = points.translate(-origin)
+            points = points.rotate(points, angle, [0, 0])
+            points = points.translate(origin)
 
-
-
-
-
-def test():
-    v1 = Point([1, 2, 3])
-    v2 = Point([4, 5, 7])
-    v3 = Point([4, ])
-    sum12 = Point([5, 7, 10])
-    dot12 = Point([4, 10, 21])
-
-    # Access
-    assert v2.x == 4
-    assert v2.y == 5
-    assert v2.z == 7
-    assert v3.z == 0
-    assert Point().x == 0
-    assert v2[0] == 4
-    assert v1[-1] == 3  # Not needed but inherited
-    assert [x for x in v2] == [4, 5, 7], "Iteration should return all elements"
-
-    # Operations
-    assert v1 + v2 == sum12
-    assert v1 * v2 == dot12
-    assert v1.dist(v2) ** 2 == 34
-    assert v1 != v2
-    assert v2.size == 3, "v2 should be a 3d point"
-
+        result = points @ a.T
+        return result[:, 0:2].view(cls)
 
 
 if __name__ == "__main__":
-    v1 = Point([1, 2])
-    v2 = Point([1, 5])
-    v3 = Point([1, 0])
-
-
-    scale = np.array([[2, 0],
-                      [0, 1]])
-
-    print(v1.x)
+    v1 = Point([2, 2])
+    v2 = Point([1, 1])
+    v3 = Point([1, 1])
 
     points = Points([v1, v2, v3])
-    print(points)
+    # scale_point = points.scale(points, [1, 1])
+    scale_point = points.translate(points, [2, 2])
+    # scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
 
-    # scaled = points @ scale
-    # print(scaled)
+    print(scale_point)
 
-    print('translation: ', points.translate(x=5, y=5))
+
