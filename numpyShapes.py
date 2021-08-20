@@ -2,15 +2,30 @@ import numpy as np
 from typing import get_type_hints
 
 
+def _get_args_dict(fn, args, kwargs={}):
+    args_names = fn.__code__.co_varnames[:fn.__code__.co_argcount]
+    return {**dict(zip(args_names, args)), **kwargs}
+
+
 def to_point(method):
     def wrapper(*args):
+        # get dict of all arg names and values
+        func_args = _get_args_dict(method, args)
+        # get list all function parameters hinted types
         hints = get_type_hints(method)
-        print(f'{hints=}')
-        print(args)
-        # for arg, arg_type in args:
+
+        # ensure all inputted arguments match hinted types, if not construct object
+        for hint in hints:
+            if hint in func_args:
+                if not isinstance(type(func_args[hint]), hints[hint]):
+                    func_args[hint] = hints[hint](func_args[hint])
+        # assign func_args dict values to args
+        args = func_args.values()
+        #call method
         result = method(*args)
         return result
     return wrapper
+
 
 class Point(np.ndarray):
     """
@@ -90,7 +105,8 @@ class Points(np.ndarray):
         return result[:, 0:2].view(cls)
 
     @classmethod
-    def scale(cls, points, scale:Point = Point([1,1])):
+    @to_point
+    def scale(cls, points, scale: Point = Point([1, 1])):
         points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
         a = np.array([[scale[0],     0,     0],
                       [  0,       scale[1], 0],
@@ -100,7 +116,8 @@ class Points(np.ndarray):
         return result[:, 0:2].view(cls)
 
     @classmethod
-    def rotate(cls, points, angle, origin:Point = Point([0, 0])):
+    @to_point
+    def rotate(cls, points, angle, origin: Point = Point([0, 0])):
         cos = np.cos(angle)
         sin = np.sin(angle)
 
@@ -110,15 +127,18 @@ class Points(np.ndarray):
 
         if origin == [0, 0]:
             points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
-            print('rotate about origin')
+            result = points @ a.T
+            return result[:, 0:2].view(cls)
         else:
-            print('rotate about: {}'.format(origin))
-            points = points.translate(-origin)
+            points = points.translate(points, -origin)
             points = points.rotate(points, angle, [0, 0])
-            points = points.translate(origin)
+            points = points.translate(points, origin)
+            return points
 
-        result = points @ a.T
-        return result[:, 0:2].view(cls)
+
+
+    # def inside_points(self, point:Point):
+
 
 
 if __name__ == "__main__":
@@ -128,8 +148,8 @@ if __name__ == "__main__":
 
     points = Points([v1, v2, v3])
     # scale_point = points.scale(points, [1, 1])
-    scale_point = points.translate(points, [2, 2])
-    # scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
+    # scale_point = points.translate(points, [2, 2])
+    scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
 
     print(scale_point)
 
