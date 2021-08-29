@@ -141,6 +141,27 @@ class Points(np.ndarray):
 
 
 
+class RectAttributes:
+    def __init__(self, center:Point, width, height, rotation):
+        self.center = center
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+
+class Rectangle(Points):
+    def __init__(self, points: Points = None, rect_attributes: RectAttributes = None):
+        # Construct with just points
+        if RectAttributes is None and points is not None:
+            self.Points = points
+
+    def check_inside(self, point:Point):
+        #Check if the point is inside the rectangle
+        return True
+    def construct_rect_from_attributes(self, rect_attributes):
+        return Points
+    def check_is_rectangle(self):
+        return True
+
 if __name__ == "__main__":
     v1 = Point([2, 2])
     v2 = Point([1, 1])
