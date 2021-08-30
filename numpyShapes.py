@@ -1,5 +1,6 @@
 import numpy as np
 from typing import get_type_hints
+import os
 
 
 def _get_args_dict(fn, args, kwargs={}):
@@ -42,7 +43,7 @@ class Point(np.ndarray):
         :param input_array: Defaults to 2d origin
         """
 
-        obj = np.asarray(input_array).view(cls)
+        obj = np.asarray(input_array, dtype='f').view(cls)
         return obj
 
     @property
@@ -135,43 +136,130 @@ class Points(np.ndarray):
             points = points.translate(points, origin)
             return points
 
+    @classmethod
+    @to_point
+    def check_inside(cls, points, q_point: Point):
+        """
+        Based on the Point in Polygon Algo:
+        https://towardsdatascience.com/is-the-point-inside-the-polygon-574b86472119
+        Iterate through points and determine if result >0 for each line
+        """
+        result = 0
 
+        for i in range(0, points.shape[0] - 1):
+            # eqn to find which side of line segment point lies
+            test_expression = (q_point[1] - points[i][1]) * (points[i + 1][0] - points[i][0]) - \
+                              (q_point[0] - points[i][0]) * (points[i + 1][1] - points[i][1])
 
-    # def inside_points(self, point:Point):
+            if test_expression > 0:
+                result += 1
+            elif test_expression < 0:
+                result -= 1
+            else:
+                return False
 
+        # return true if all segments are consistent in either CCW or CW direction
+        return abs(result) == points.shape[0]
 
 
 class RectAttributes:
-    def __init__(self, center:Point, width, height, rotation):
+    def __init__(self, center: Point = Point([0, 0]), width=0, height=0, rotation=0):
         self.center = center
         self.width = width
         self.height = height
         self.rotation = rotation
 
+    def __repr__(self):
+        return 'Attributes(Center {0}, Width {1}, Height {2}, Rotation {3}) '\
+            .format(self.center, self.width, self.height, self.rotation)
+
+
 class Rectangle(Points):
     def __init__(self, points: Points = None, rect_attributes: RectAttributes = None):
-        # Construct with just points
-        if RectAttributes is None and points is not None:
-            self.Points = points
+        self.points = None
 
-    def check_inside(self, point:Point):
-        #Check if the point is inside the rectangle
-        return True
-    def construct_rect_from_attributes(self, rect_attributes):
-        return Points
+        # Construct with just points, check that the points form a rectangle first
+        if rect_attributes is None and points is not None:
+            self.points = points
+            self.attributes = RectAttributes()
+
+            if not self.check_is_rectangle():
+                raise ValueError('Points do not form a rectangle')
+                os.exit()
+            else:
+                self.calc_attributes()
+
+        # Build rectangle from attributes
+        elif RectAttributes is not None:
+            self.attributes = rect_attributes
+            self.construct_rect_from_attributes()
+
+    def __str__(self):
+        return 'Points(Top Left {0}, Top Right {1}, Bottom Right {2}, Bottom Left {3})'\
+            .format(self.points[0], self.points[1], self.points[2], self.points[3]) + '\n' + self.attributes.__repr__()
+
+    def get_center(self):
+        self.attributes.center[0] = (self.points[0][0] + self.points[2][0]) / 2
+        self.attributes.center[1] = (self.points[0][1] + self.points[2][1]) / 2
+
+    def calc_attributes(self):
+        self.get_center()
+        self.attributes.width = np.linalg.norm(self.points[0] - self.points[1])
+        self.attributes.height = np.linalg.norm(self.points[0] - self.points[3])
+
+    @to_point
+    def construct_rect_from_attributes(self):
+        """
+            Set points first from attributes, then rotate all of them by rotation attribute
+        """
+        # Top Left
+        self.points[0][0] = self.attributes.center - self.width/2
+        self.points[0][1] = self.attributes.center - self.height/2
+
+        # Top Right
+        self.points[1][0] = self.attributes.center + self.width/2
+        self.points[1][1] = self.attributes.center - self.height/2
+
+        # Bottom Right
+        self.points[2][0] = self.attributes.center + self.width/2
+        self.points[2][1] = self.attributes.center + self.height/2
+
+        # Bottom Left
+        self.points[3][0] = self.attributes.center - self.width/2
+        self.points[3][1] = self.attributes.center + self.height/2
+
+        self.points = Points.rotate(self.points, self.attributes.rotation, self.attributes.center)
+
     def check_is_rectangle(self):
-        return True
+        @to_point
+        def is_orthogonal(a: Point, b: Point, c: Point):
+            return (b.x - a.x) * (b.x - c.x) + (b.y - a.y) * (b.y - c.y) == 0
+
+        return is_orthogonal(self.points[3], self.points[0], self.points[1]) and \
+               is_orthogonal(self.points[0], self.points[1], self.points[2]) and \
+               is_orthogonal(self.points[1], self.points[2], self.points[3])
+
 
 if __name__ == "__main__":
-    v1 = Point([2, 2])
-    v2 = Point([1, 1])
-    v3 = Point([1, 1])
+    v1 = Point([2, 1])
+    v2 = Point([2, 2])
+    v3 = Point([1, 2])
+    v4 = Point([1, 1])
 
-    points = Points([v1, v2, v3])
+
+
+    points = Points([v1, v2, v3, v4])
+
+    rectangle = Rectangle(points)
+    print(rectangle)
+    print('point shape: ', points.shape)
+
+    rectangle.attributes.rotation = np.deg2rad(45)
+
     # scale_point = points.scale(points, [1, 1])
     # scale_point = points.translate(points, [2, 2])
-    scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
+    # scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
 
-    print(scale_point)
+    # print(scale_point)
 
 

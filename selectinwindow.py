@@ -46,6 +46,7 @@ class Rect:
         self.w = math.cos(angle) * hypot
         self.h = math.sin(angle) * hypot
 
+
     def get_vertices_points(self):
         width, height, angle = self.w, self.h, self.angle
         cos = math.cos(angle)
