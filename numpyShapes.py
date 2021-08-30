@@ -1,6 +1,7 @@
 import numpy as np
 from typing import get_type_hints
 import os
+import cv2
 
 
 def _get_args_dict(fn, args, kwargs={}):
@@ -50,9 +51,17 @@ class Point(np.ndarray):
     def x(self):
         return self[0]
 
+    @x.setter
+    def x(self, x):
+        self.point[0] = x
+
     @property
     def y(self):
         return self[1]
+
+    @y.setter
+    def y(self, y):
+        self.point[1] = y
 
     @property
     def z(self):
@@ -63,6 +72,16 @@ class Point(np.ndarray):
             return self[2]
         except IndexError:
             return 0
+
+    @z.setter
+    def z(self, z):
+        """
+        :return: 3rd dimension element. 0 if not defined
+        """
+        try:
+            self.point[2] = z
+        except IndexError:
+            raise IndexError('Out of index, no Z defined originally')
 
     def __eq__(self, other):
         return np.array_equal(self, other)
@@ -112,20 +131,18 @@ class Points(np.ndarray):
         a = np.array([[scale[0],     0,     0],
                       [  0,       scale[1], 0],
                       [  0,         0,     1]])
-
         result = points @ a.T
         return result[:, 0:2].view(cls)
 
     @classmethod
     @to_point
     def rotate(cls, points, angle, origin: Point = Point([0, 0])):
+        print(points)
         cos = np.cos(angle)
         sin = np.sin(angle)
-
         a = np.array([[cos, -sin, 0],
                       [sin, cos,  0],
                       [0,   0,    1]])
-
         if origin == [0, 0]:
             points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
             result = points @ a.T
@@ -207,26 +224,91 @@ class Rectangle(Points):
         self.attributes.width = np.linalg.norm(self.points[0] - self.points[1])
         self.attributes.height = np.linalg.norm(self.points[0] - self.points[3])
 
+    def update(self, center: Point = None, width=None, height=None, rotation=None):
+        if center is not None:
+            self.attributes.center = center
+        if width is not None:
+            self.attributes.width = width
+        if height is not None:
+            self.attributes.height = height
+        if rotation is not None:
+            self.attributes.rotation = rotation
+
+        self.construct_rect_from_attributes()
+
+    def cv_format(self):
+        return ((self.attributes.center.x, self.attributes.center.y), (self.attributes.width, self.attributes.height),
+                self.attributes.rotation)
+
+    @property
+    def center(self):
+        return self.attributes.center
+
+    @center.setter
+    @to_point
+    def center(self, center: Point):
+        self.update(center=center)
+
+    @property
+    def width(self):
+        return self.attributes.width
+
+    @width.setter
+    def width(self, width):
+        self.update(width=width)
+
+    @property
+    def height(self):
+        return self.attributes.height
+
+    @height.setter
+    def height(self, height):
+        self.update(height=height)
+
+    @property
+    def rotation(self):
+        return self.attributes.rotation
+
+    @rotation.setter
+    def rotation(self, rotation):
+        self.update(rotation=rotation)
+
+    @property
+    def tl(self):
+        return Point(self.points[0])
+
+    @property
+    def tr(self):
+        return Point(self.points[1])
+
+    @property
+    def br(self):
+        return Point(self.points[2])
+
+    @property
+    def bl(self):
+        return Point(self.points[3])
+
     @to_point
     def construct_rect_from_attributes(self):
         """
             Set points first from attributes, then rotate all of them by rotation attribute
         """
         # Top Left
-        self.points[0][0] = self.attributes.center - self.width/2
-        self.points[0][1] = self.attributes.center - self.height/2
+        self.points[0][0] = self.attributes.center.x - self.width/2
+        self.points[0][1] = self.attributes.center.y - self.height/2
 
         # Top Right
-        self.points[1][0] = self.attributes.center + self.width/2
-        self.points[1][1] = self.attributes.center - self.height/2
+        self.points[1][0] = self.attributes.center.x + self.width/2
+        self.points[1][1] = self.attributes.center.y - self.height/2
 
         # Bottom Right
-        self.points[2][0] = self.attributes.center + self.width/2
-        self.points[2][1] = self.attributes.center + self.height/2
+        self.points[2][0] = self.attributes.center.x + self.width/2
+        self.points[2][1] = self.attributes.center.y + self.height/2
 
         # Bottom Left
-        self.points[3][0] = self.attributes.center - self.width/2
-        self.points[3][1] = self.attributes.center + self.height/2
+        self.points[3][0] = self.attributes.center.x - self.width/2
+        self.points[3][1] = self.attributes.center.y + self.height/2
 
         self.points = Points.rotate(self.points, self.attributes.rotation, self.attributes.center)
 
@@ -241,25 +323,28 @@ class Rectangle(Points):
 
 
 if __name__ == "__main__":
-    v1 = Point([2, 1])
-    v2 = Point([2, 2])
-    v3 = Point([1, 2])
-    v4 = Point([1, 1])
+    def plot_rect(img, rect, color=(255, 255, 0)):
+        box = cv2.boxPoints(rect.cv_format())
+        box = np.int0(box)
+        cv2.drawContours(img, [box], -1, color, 1)
 
-
-
+    v1 = Point([100, 100])
+    v2 = Point([200, 100])
+    v3 = Point([200, 200])
+    v4 = Point([100, 200])
     points = Points([v1, v2, v3, v4])
 
+    wName = "test display"
+    imageWidth = 640
+    imageHeight = 480
+    cv2.namedWindow(wName)
+    image = np.ones([imageHeight, imageWidth, 3], dtype=np.uint8)  # OR read an image using imread()
+
     rectangle = Rectangle(points)
-    print(rectangle)
-    print('point shape: ', points.shape)
+    # plot_rect(image, rectangle, (0, 255, 0))
 
-    rectangle.attributes.rotation = np.deg2rad(45)
+    rectangle.rotation = np.deg2rad(30)
+    plot_rect(image, rectangle, (255, 0, 255))
 
-    # scale_point = points.scale(points, [1, 1])
-    # scale_point = points.translate(points, [2, 2])
-    # scale_point = points.rotate(points, np.deg2rad(90), [1, 1])
-
-    # print(scale_point)
-
-
+    cv2.imshow(wName, image)
+    key = cv2.waitKey(0) & 0xFF
