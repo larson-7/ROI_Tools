@@ -21,6 +21,7 @@ class ROIRectangle(Rectangle):
         self.lm_selection = None
         self.rotate_selection = None
         self.box_size = 5
+        self.geometries = {}
 
         # calculate selection rectangles
         self.update()
@@ -40,21 +41,17 @@ class ROIRectangle(Rectangle):
                                       , self.box_size, self.box_size, self.rectangle.rotation)
         self.rotate_selection = Circle(self.tm_selection.center + [0, 3/2 * self.box_size], self.box_size)
 
-    def get_contours(self):
-        contours = {}
-        contours.append(self.tl_selection)
-        contours.append(self.tm_selection)
-        contours.append(self.tr_selection)
-        contours.append(self.rm_selection)
-        contours.append(self.br_selection)
-        contours.append(self.bm_selection)
-        contours.append(self.bl_selection)
-        contours.append(self.lm_selection)
-        contours.append(self.rotate_selection)
-        return contours
+        # populate list of all geometries
+        self.geometries.append(self.tl_selection)
+        self.geometries.append(self.tm_selection)
+        self.geometries.append(self.tr_selection)
+        self.geometries.append(self.rm_selection)
+        self.geometries.append(self.br_selection)
+        self.geometries.append(self.bm_selection)
+        self.geometries.append(self.bl_selection)
+        self.geometries.append(self.lm_selection)
+        self.geometries.append(self.rotate_selection)
 
     def plot(self, image, color=(0, 255, 0), thickness=1):
-        contours = self.get_contours()
-
-        for contour in contours:
+        for contour in self.geometries:
             contour.plot(image, color, thickness)

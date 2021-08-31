@@ -35,6 +35,8 @@ if __name__ == "__main__":
     # key = cv2.waitKey(0) & 0xFF
 
     test_rect = Rectangle(([100,100],10,10,0))
+
+    print(test_rect)
 if __name__ == "__md__":
     v1 = Point([100, 100])
     points = Points([v1])

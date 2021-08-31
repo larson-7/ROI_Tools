@@ -24,13 +24,10 @@ def init_args(method):
         return result
     return wrapper
 
+
 class Points(np.ndarray):
     def __new__(cls, list_of_points):
-        print(f'{list_of_points=}')
-        """
-        :param cls:
-        :param list_of_points: needs multiple points or ndarrays
-        """
+
         if type(list_of_points) == 'numpy.ndarray':
             obj = list_of_points
         else:

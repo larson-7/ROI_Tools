@@ -341,10 +341,12 @@ if __name__ == "__main__":
     image = np.ones([imageHeight, imageWidth, 3], dtype=np.uint8)  # OR read an image using imread()
 
     rectangle = Rectangle(points)
+    print(rectangle)
+
     # plot_rect(image, rectangle, (0, 255, 0))
-
-    rectangle.rotation = np.deg2rad(30)
-    plot_rect(image, rectangle, (255, 0, 255))
-
-    cv2.imshow(wName, image)
-    key = cv2.waitKey(0) & 0xFF
+    #
+    # rectangle.rotation = np.deg2rad(30)
+    # plot_rect(image, rectangle, (255, 0, 255))
+    #
+    # cv2.imshow(wName, image)
+    # key = cv2.waitKey(0) & 0xFF

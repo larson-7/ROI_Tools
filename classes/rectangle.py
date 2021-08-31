@@ -2,10 +2,12 @@ import numpy as np
 from classes.point import Point
 from classes.points import Points, init_args
 import cv2
+from typing import Union
 
 class RectAttributes:
     @init_args
     def __init__(self, center: Point = Point([0, 0]), width=0, height=0, rotation=0):
+        print('constructing attributes')
         self.center = center
         self.width = width
         self.height = height
@@ -15,15 +17,23 @@ class RectAttributes:
         return 'Attributes(Center {0}, Width {1}, Height {2}, Rotation {3}) '\
             .format(self.center, self.width, self.height, self.rotation)
 
-
+#  TODO: May want to just have a rectangle be composed of a point instead of subclassing it.
 class Rectangle(Points):
-    @init_args
+
+    def __new__(cls, rect_attributes: RectAttributes = None, points: Points = None):
+        # construct from attributes
+        if rect_attributes is not None:
+            print('constructing from attributes')
+            super().__new__(cls.rect_from_attributes(rect_attributes))
+        else:
+            # a default value if the rect was constructed another
+            # way, or inversely construct a RectAttributes from points
+            return points
+
     def __init__(self, rect_attributes: RectAttributes):
-        self.points = np.zeros((4, 2))
         print('in rect constructor')
+        print(self)
         self.attributes = rect_attributes
-        self.construct_rect_from_attributes()
-        super().__init__(self.points)
 
     def __str__(self):
         return 'Points(Top Left {0}, Top Right {1}, Bottom Right {2}, Bottom Left {3})'\
@@ -48,7 +58,7 @@ class Rectangle(Points):
         if rotation is not None:
             self.attributes.rotation = rotation
 
-        self.construct_rect_from_attributes()
+        self.rect_from_attributes()
 
     def cv_format(self):
         return ((self.attributes.center.x, self.attributes.center.y), (self.attributes.width, self.attributes.height),
@@ -109,27 +119,30 @@ class Rectangle(Points):
         return Point(self.points[3])
 
     @init_args
-    def construct_rect_from_attributes(self):
+    @classmethod
+    def rect_from_attributes(cls, attributes):
+        points = np.zeros((4,2))
         """
             Set points first from attributes, then rotate all of them by rotation attribute
         """
         # Top Left
-        self.points[0][0] = self.attributes.center.x - self.width/2
-        self.points[0][1] = self.attributes.center.y - self.height/2
+        points[0][0] = attributes.center.x - attributes.width/2
+        points[0][1] = attributes.center.y - attributes.height/2
 
         # Top Right
-        self.points[1][0] = self.attributes.center.x + self.width/2
-        self.points[1][1] = self.attributes.center.y - self.height/2
+        points[1][0] = attributes.attributes.center.x + attributes.width/2
+        points[1][1] = attributes.attributes.center.y - attributes.height/2
 
         # Bottom Right
-        self.points[2][0] = self.attributes.center.x + self.width/2
-        self.points[2][1] = self.attributes.center.y + self.height/2
+        points[2][0] = attributes.attributes.center.x + attributes.width/2
+        points[2][1] = attributes.attributes.center.y + attributes.height/2
 
         # Bottom Left
-        self.points[3][0] = self.attributes.center.x - self.width/2
-        self.points[3][1] = self.attributes.center.y + self.height/2
+        points[3][0] = attributes.attributes.center.x - attributes.width/2
+        points[3][1] = attributes.attributes.center.y + attributes.height/2
 
-        self.points = Points.rotate(self.points, self.attributes.rotation, self.attributes.center)
+        points = Points.rotate(points, attributes.rotation, attributes.center)
+        return points
 
     def check_is_rectangle(self):
         @init_args
