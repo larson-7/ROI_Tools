@@ -26,7 +26,6 @@ while True:
     cv2.imshow(wName, rectI.image)
     key = cv2.waitKey(10) & 0xFF
 
-
     # if returnflag is True, break from the loop
     if rectI.returnflag:
         break

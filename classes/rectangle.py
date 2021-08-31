@@ -1,8 +1,10 @@
 import numpy as np
 from classes.point import Point
 from classes.points import Points, to_point
+import cv2
 
 class RectAttributes:
+    @to_point
     def __init__(self, center: Point = Point([0, 0]), width=0, height=0, rotation=0):
         self.center = center
         self.width = width
@@ -15,11 +17,13 @@ class RectAttributes:
 
 
 class Rectangle(Points):
+    @to_point
     def __init__(self, points: Points = None, rect_attributes: RectAttributes = None):
         self.points = None
 
         # Construct with just points, check that the points form a rectangle first
         if rect_attributes is None and points is not None:
+            print('inpint constructor')
             self.points = points
             self.attributes = RectAttributes()
 
@@ -31,6 +35,7 @@ class Rectangle(Points):
 
         # Build rectangle from attributes
         elif RectAttributes is not None:
+            print('in rect constructor')
             self.attributes = rect_attributes
             self.construct_rect_from_attributes()
 
@@ -62,6 +67,11 @@ class Rectangle(Points):
     def cv_format(self):
         return ((self.attributes.center.x, self.attributes.center.y), (self.attributes.width, self.attributes.height),
                 np.rad2deg(self.attributes.rotation))
+
+    def plot(self, image, color=(0, 255, 0), thickness=1):
+        box = cv2.boxPoints(self.cv_format())
+        box = np.int0(box)
+        cv2.drawContours(image, [box], -1, color, thickness)
 
     @property
     def center(self):

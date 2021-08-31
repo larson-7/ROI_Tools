@@ -11,9 +11,7 @@ def _get_args_dict(fn, args, kwargs={}):
 
 def to_point(method):
     def wrapper(*args):
-        # get dict of all arg names and values
         func_args = _get_args_dict(method, args)
-        # get list all function parameters hinted types
         hints = get_type_hints(method)
 
         # ensure all inputted arguments match hinted types, if not construct object
@@ -21,9 +19,7 @@ def to_point(method):
             if hint in func_args:
                 if not isinstance(type(func_args[hint]), hints[hint]):
                     func_args[hint] = hints[hint](func_args[hint])
-        # assign func_args dict values to args
         args = func_args.values()
-        #call method
         result = method(*args)
         return result
     return wrapper

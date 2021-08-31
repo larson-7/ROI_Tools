@@ -1,6 +1,7 @@
 import numpy as np
 from classes.point import Point
 from classes.points import to_point
+import cv2
 
 class Circle(Point):
     @to_point
@@ -23,3 +24,6 @@ class Circle(Point):
     @y.setter
     def y(self, y):
         self.center.y = y
+
+    def plot(self, image, color=(0, 255, 0), thickness=1):
+        cv2.circle(image, (self.x, self.y), self.diameter/2, color, thickness)
