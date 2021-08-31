@@ -9,7 +9,7 @@ def _get_args_dict(fn, args, kwargs={}):
     return {**dict(zip(args_names, args)), **kwargs}
 
 
-def to_point(method):
+def init_args(method):
     def wrapper(*args):
         func_args = _get_args_dict(method, args)
         hints = get_type_hints(method)
@@ -26,6 +26,7 @@ def to_point(method):
 
 class Points(np.ndarray):
     def __new__(cls, list_of_points):
+        print(f'{list_of_points=}')
         """
         :param cls:
         :param list_of_points: needs multiple points or ndarrays
@@ -37,7 +38,7 @@ class Points(np.ndarray):
         return obj
 
     @classmethod
-    @to_point
+    @init_args
     def translate(cls, points, offset: Point = Point([0, 0])):
         points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
         a = np.array([[1, 0, offset.x],
@@ -48,7 +49,7 @@ class Points(np.ndarray):
         return result[:, 0:2].view(cls)
 
     @classmethod
-    @to_point
+    @init_args
     def scale(cls, points, scale: Point = Point([1, 1])):
         points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
         a = np.array([[scale[0],     0,     0],
@@ -58,7 +59,7 @@ class Points(np.ndarray):
         return result[:, 0:2].view(cls)
 
     @classmethod
-    @to_point
+    @init_args
     def rotate(cls, points, angle, origin: Point = Point([0, 0])):
         cos = np.cos(angle)
         sin = np.sin(angle)
@@ -76,7 +77,7 @@ class Points(np.ndarray):
             return points
 
     @classmethod
-    @to_point
+    @init_args
     def check_inside(cls, points, q_point: Point):
         """
         Based on the Point in Polygon Algo:

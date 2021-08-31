@@ -1,6 +1,6 @@
 import numpy as np
 from classes.point import Point
-from classes.points import Points, to_point
+from classes.points import Points, init_args
 from classes.rectangle import Rectangle
 from classes.circle import Circle
 
@@ -54,7 +54,7 @@ class ROIRectangle(Rectangle):
     # rectangle is being held down
     hold = False
 
-    @to_point
+    @init_args
     def __init__(self, rectangle: Rectangle, image, windowName):
         # ROI geometry
         self.rectangle = rectangle

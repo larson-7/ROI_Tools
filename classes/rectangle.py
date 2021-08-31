@@ -1,10 +1,10 @@
 import numpy as np
 from classes.point import Point
-from classes.points import Points, to_point
+from classes.points import Points, init_args
 import cv2
 
 class RectAttributes:
-    @to_point
+    @init_args
     def __init__(self, center: Point = Point([0, 0]), width=0, height=0, rotation=0):
         self.center = center
         self.width = width
@@ -17,27 +17,13 @@ class RectAttributes:
 
 
 class Rectangle(Points):
-    @to_point
-    def __init__(self, points: Points = None, rect_attributes: RectAttributes = None):
-        self.points = None
-
-        # Construct with just points, check that the points form a rectangle first
-        if rect_attributes is None and points is not None:
-            print('inpint constructor')
-            self.points = points
-            self.attributes = RectAttributes()
-
-            if not self.check_is_rectangle():
-                raise ValueError('Points do not form a rectangle')
-                os.exit()
-            else:
-                self.calc_attributes()
-
-        # Build rectangle from attributes
-        elif RectAttributes is not None:
-            print('in rect constructor')
-            self.attributes = rect_attributes
-            self.construct_rect_from_attributes()
+    @init_args
+    def __init__(self, rect_attributes: RectAttributes):
+        self.points = np.zeros((4, 2))
+        print('in rect constructor')
+        self.attributes = rect_attributes
+        self.construct_rect_from_attributes()
+        super().__init__(self.points)
 
     def __str__(self):
         return 'Points(Top Left {0}, Top Right {1}, Bottom Right {2}, Bottom Left {3})'\
@@ -78,7 +64,7 @@ class Rectangle(Points):
         return self.attributes.center
 
     @center.setter
-    @to_point
+    @init_args
     def center(self, center: Point):
         self.update(center=center)
 
@@ -122,7 +108,7 @@ class Rectangle(Points):
     def bl(self):
         return Point(self.points[3])
 
-    @to_point
+    @init_args
     def construct_rect_from_attributes(self):
         """
             Set points first from attributes, then rotate all of them by rotation attribute
@@ -146,7 +132,7 @@ class Rectangle(Points):
         self.points = Points.rotate(self.points, self.attributes.rotation, self.attributes.center)
 
     def check_is_rectangle(self):
-        @to_point
+        @init_args
         def is_orthogonal(a: Point, b: Point, c: Point):
             return (b.x - a.x) * (b.x - c.x) + (b.y - a.y) * (b.y - c.y) == 0
 

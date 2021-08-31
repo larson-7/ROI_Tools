@@ -1,10 +1,10 @@
 import numpy as np
 from classes.point import Point
-from classes.points import to_point
+from classes.points import init_args
 import cv2
 
 class Circle(Point):
-    @to_point
+    @init_args
     def __init__(self, center: Point, diameter):
         self.center = center
         self.diameter = diameter
