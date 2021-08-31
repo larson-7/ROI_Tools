@@ -61,7 +61,7 @@ class Rectangle(Points):
 
     def cv_format(self):
         return ((self.attributes.center.x, self.attributes.center.y), (self.attributes.width, self.attributes.height),
-                self.attributes.rotation)
+                np.rad2deg(self.attributes.rotation))
 
     @property
     def center(self):

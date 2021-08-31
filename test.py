@@ -30,6 +30,11 @@ if __name__ == "__main__":
 
     rectangle.rotation = np.deg2rad(45)
     print(rectangle)
+
+    for point in rectangle.points:
+        cv2.circle(image, tuple(point.astype("int")),1,(0,0,255))
+
+    cv2.circle(image, tuple(point.astype("int")), 1, (0, 0, 255))
     plot_rect(image, rectangle, (255, 0, 255))
 
     cv2.imshow(wName, image)
