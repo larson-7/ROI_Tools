@@ -90,6 +90,7 @@ class ROIRectangle:
         diff = (self.rectangle.center - self.tm_selection.center)
         direction = diff/np.linalg.norm(diff)
         self.rotate_selection = Circle(self.tm_selection.center - direction * self.box_size * 2, self.box_size)
+        print(self.rotate_selection)
 
         # populate list of all geometries
         self.geometries.append(self.rectangle)
@@ -107,79 +108,87 @@ class ROIRectangle:
         for contour in self.geometries:
             contour.plot(image, color, thickness)
 
-    def dragrect(self, event, x, y, flags):
-        x = int(x)
-        y = int(y)
-        # limit x & y to keepWithin bounds of cv2 window
-        if x < self.keepWithin.points[0].x:
-            x = self.keepWithin.points[0].x
-        if y < self.keepWithin.points[0].y:
-            y = self.keepWithin.points[0].y
-        if x > self.keepWithin.points[2].x - 1:
-            x = self.keepWithin.points[2].x - 1
-        if y > self.keepWithin.points[2].y - 1:
-            y = self.keepWithin.points[2].y - 1
-
+    def dragrect(self, event, x, y, flags, param):
+        mouse_pos = Point([x, y])
+        # limit x & y to keep_within bounds of cv2 window
+        if mouse_pos.x < self.keep_within.points[0][0]:
+            mouse_pos.x = self.keep_within.points[0][0]
+        if mouse_pos.y < self.keep_within.points[0][1]:
+            mouse_pos.y = self.keep_within.points[0][1]
+        if mouse_pos.x > self.keep_within.points[2][0] - 1:
+            mouse_pos.x = self.keep_within.points[2][0] - 1
+        if mouse_pos.y > self.keep_within.points[2][1] - 1:
+            mouse_pos.y = self.keep_within.points[2][1] - 1
         # handle cv2 mouse events
         if event == cv2.EVENT_LBUTTONDOWN:
-            self.mouseDown(x, y)
+            self.mouse_down(mouse_pos)
         if event == cv2.EVENT_LBUTTONUP:
-            self.mouseUp()
+            self.mouse_up()
         if event == cv2.EVENT_MOUSEMOVE:
-            self.mouseMove(x, y)
+            self.mouse_move(mouse_pos)
 
-    def mouseDown(self, eX, eY):
+    def mouse_down(self, mouse_pos):
         # determine if cursor is on any of the outer re-sizing 'buttons'
         if self.active:
-            if pointInRect(eX, eY, Buttons.TL):
-                dragObj.TL = True
+            if Points.point_inside(self.tl_selection.points, mouse_pos):
+                self.TL = True
 
-            if pointInRect(eX, eY, Buttons.TR):
-                dragObj.TR = True
+            if Points.point_inside(self.tm_selection.points, mouse_pos):
+                self.TM = True
 
-            if pointInRect(eX, eY, Buttons.BL):
-                dragObj.BL = True
+            if Points.point_inside(self.tr_selection.points, mouse_pos):
+                self.TR = True
 
-            if pointInRect(eX, eY, Buttons.BR):
-                dragObj.BR = True
+            if Points.point_inside(self.rm_selection.points, mouse_pos):
+                self.RM = True
+            
+            if Points.point_inside(self.br_selection.points, mouse_pos):
+                self.BR = True
 
-            if pointInRect(eX, eY, Buttons.TM):
-                dragObj.TM = True
+            if Points.point_inside(self.bm_selection.points, mouse_pos):
+                self.BM = True
+                
+            if Points.point_inside(self.bl_selection.points, mouse_pos):
+                self.BL = True
 
-            if pointInRect(eX, eY, Buttons.BM):
-                dragObj.BM = True
+            if Points.point_inside(self.rm_selection.points, mouse_pos):
+                self.RM = True
+                
+            if Points.point_inside(self.rotate_selection.points, mouse_pos):
+                self.Rotate = True
 
-            if pointInRect(eX, eY, Buttons.LM):
-                dragObj.LM = True
-
-            if pointInRect(eX, eY, Buttons.RM):
-                dragObj.RM = True
-
-            resize = np.any([dragObj.TL, dragObj.TR, dragObj.BL, dragObj.BR, dragObj.TM, dragObj.BM, dragObj.LM, dragObj.RM])
+            resize = np.any([self.TL, self.TR, self.BL, self.BR, self.TM, self.BM, self.LM, self.RM])
             if resize:
-                dragObj.anchor = dragObj.outRect
-                return
-
-            # If event is inside rectangle and not in any button, translate whole rectangle
-            # This has to be below all of the other conditions
-            if pointInRect(eX, eY, dragObj.outRect) and not resize:
-                print('drag rectangle')
-                dragObj.anchor.center.x = eX - dragObj.outRect.center.x
-                dragObj.anchor.w = dragObj.outRect.w
-                dragObj.anchor.center.y = eY - dragObj.outRect.center.y
-                dragObj.anchor.h = dragObj.outRect.h
-                dragObj.hold = True
-                return
+                pass
 
         # Rectangle hasn't been created yet, set to active and record mouse position in outRect
         else:
-            print('start creation of rectangle')
-            #TODO: FIX
-            dragObj.anchor.points[2].x = eX - dragObj.outRect.points[2].x
-            dragObj.anchor.points[2].y = eY - dragObj.outRect.points[2].y
-
-            dragObj.outRect.points[0].x = eX
-            dragObj.outRect.points[0].y = eY
-            dragObj.drag = True
-            dragObj.active = True
+            print('creating rectangle')
+            self.anchor = mouse_pos
+            print(self.rectangle.tl)
+            self.drag = True
+            self.active = True
             return
+
+    def mouse_move(self, mouse_pos):
+        # Rectangle is in process of being created, track where mouse is being dragged to
+        if self.drag & self.active:
+            delta = mouse_pos - self.anchor
+            center = (mouse_pos + self.anchor) / 2
+
+            if delta != [0, 0]:
+                self.rectangle.attributes.width = delta.x
+                self.rectangle.attributes.height = delta.y
+                self.rectangle.attributes.center = center
+                self.rectangle.rect_from_attributes()
+                # print(self.rectangle)
+                self.update()
+                self.redraw()
+
+    # Mouse was let up, drag turns off any active "button" selections
+    def mouse_up(self):
+        self.drag = False
+
+    def redraw(self):
+        self.image = self.image_display.copy()
+        self.plot(self.image, color=(0, 0, 255))

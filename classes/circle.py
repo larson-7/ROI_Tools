@@ -5,9 +5,13 @@ import cv2
 
 class Circle:
     @init_args
-    def __init__(self, center: Point, diameter):
+    def __init__(self, center: Point = Point([0, 0]), diameter=0):
         self.center = center
         self.diameter = diameter
+
+
+    def __repr__(self):
+        return 'center: {0}, diameter: {1}'.format(self.center, self.diameter)
 
     @property
     def x(self):

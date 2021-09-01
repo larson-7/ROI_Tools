@@ -4,7 +4,7 @@ import os
 import cv2
 from classes.point import Point
 from classes.points import Points
-from classes.rectangle import Rectangle,RectAttributes
+from classes.rectangle import Rectangle, RectAttributes
 from classes.roi_rectangle import ROIRectangle
 
 if __name__ == "__main__":
@@ -23,12 +23,10 @@ if __name__ == "__main__":
     cv2.moveWindow(wName, 2000, 100)
 
     image = np.ones([imageHeight, imageWidth, 3], dtype=np.uint8)  # OR read an image using imread()
-
+    image *= 255
     rectangle = Rectangle(points=points)
     # plot_rect(image, rectangle, (0, 255, 0))
-
-    rectangle.rotation = np.deg2rad(0)
-    roi_rect = ROIRectangle(rectangle, 7)
+    roi_rect = ROIRectangle(Rectangle(RectAttributes()), image, wName)
     cv2.setMouseCallback(wName, roi_rect.dragrect)
 
     # keep looping until rectangle finalized

@@ -74,7 +74,7 @@ class Points(np.ndarray):
 
     @classmethod
     @init_args
-    def check_inside(cls, points, q_point: Point):
+    def point_inside(cls, points, q_point: Point):
         """
         Based on the Point in Polygon Algo:
         https://towardsdatascience.com/is-the-point-inside-the-polygon-574b86472119
