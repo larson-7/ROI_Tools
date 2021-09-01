@@ -13,7 +13,6 @@ def init_args(method):
     def wrapper(*args):
         func_args = _get_args_dict(method, args)
         hints = get_type_hints(method)
-
         # ensure all inputted arguments match hinted types, if not construct object
         for hint in hints:
             if hint in func_args:

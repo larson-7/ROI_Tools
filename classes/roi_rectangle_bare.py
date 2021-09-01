@@ -1,14 +1,12 @@
 import numpy as np
 from classes.point import Point
 from classes.points import Points, init_args
-from classes.rectangle import Rectangle
+from classes.rectangle import Rectangle, RectAttributes
 from classes.circle import Circle
 
 
-class ROIRectangle(Rectangle):
-
-    @init_args
-    def __init__(self, rectangle: Rectangle):
+class ROIRectangle:
+    def __init__(self, rectangle: Rectangle, box_size=5):
         # ROI geometry
         self.rectangle = rectangle
         self.tl_selection = None
@@ -20,25 +18,30 @@ class ROIRectangle(Rectangle):
         self.bl_selection = None
         self.lm_selection = None
         self.rotate_selection = None
-        self.box_size = 5
-        self.geometries = {}
+        self.box_size = box_size
+        self.geometries = []
 
+        print(rectangle.attributes)
         # calculate selection rectangles
         self.update()
 
     def update(self):
-        self.tl_selection = Rectangle(rect_attributes=(self.rectangle.tl, self.box_size, self.box_size, self.rectangle.rotation))
-        self.tm_selection = Rectangle(rect_attributes=((self.rectangle.tr - self.rectangle.tl)/2
-                                      , self.box_size, self.box_size, self.rectangle.rotation))
-        self.tr_selection = Rectangle(self.rectangle.tr, self.box_size, self.box_size, self.rectangle.rotation)
-        self.rm_selection = Rectangle((self.rectangle.tr - self.rectangle.br)/2
-                                      , self.box_size, self.box_size, self.rectangle.rotation)
-        self.br_selection = Rectangle(self.rectangle.br, self.box_size, self.box_size, self.rectangle.rotation)
-        self.bm_selection = Rectangle((self.rectangle.bl - self.rectangle.br)/2
-                                      , self.box_size, self.box_size, self.rectangle.rotation)
-        self.bl_selection = Rectangle(self.rectangle.bl, self.box_size, self.box_size, self.rectangle.rotation)
-        self.lm_selection = Rectangle((self.rectangle.tl - self.rectangle.bl)/2
-                                      , self.box_size, self.box_size, self.rectangle.rotation)
+        self.tl_selection = Rectangle(RectAttributes(self.rectangle.tl,
+                                                     self.box_size, self.box_size, self.rectangle.rotation))
+        self.tm_selection = Rectangle(RectAttributes((self.rectangle.tr - self.rectangle.tl)/2,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
+        self.tr_selection = Rectangle(RectAttributes(self.rectangle.tr,
+                                                     self.box_size, self.box_size, self.rectangle.rotation))
+        self.rm_selection = Rectangle(RectAttributes((self.rectangle.tr - self.rectangle.br)/2,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
+        self.br_selection = Rectangle(RectAttributes(self.rectangle.br,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
+        self.bm_selection = Rectangle(RectAttributes((self.rectangle.bl - self.rectangle.br)/2,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
+        self.bl_selection = Rectangle(RectAttributes(self.rectangle.bl,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
+        self.lm_selection = Rectangle(RectAttributes((self.rectangle.tl - self.rectangle.bl)/2,
+                                      self.box_size, self.box_size, self.rectangle.rotation))
         self.rotate_selection = Circle(self.tm_selection.center + [0, 3/2 * self.box_size], self.box_size)
 
         # populate list of all geometries

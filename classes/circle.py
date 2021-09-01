@@ -3,7 +3,7 @@ from classes.point import Point
 from classes.points import init_args
 import cv2
 
-class Circle(Point):
+class Circle:
     @init_args
     def __init__(self, center: Point, diameter):
         self.center = center
@@ -11,7 +11,7 @@ class Circle(Point):
 
     @property
     def x(self):
-        return self.center.x
+        return int(self.center.x)
 
     @x.setter
     def x(self, x):
@@ -19,11 +19,11 @@ class Circle(Point):
 
     @property
     def y(self):
-        return self.center.y
+        return int(self.center.y)
 
     @y.setter
     def y(self, y):
         self.center.y = y
 
     def plot(self, image, color=(0, 255, 0), thickness=1):
-        cv2.circle(image, (self.x, self.y), self.diameter/2, color, thickness)
+        cv2.circle(image, (self.x, self.y), int(self.diameter/2), color, thickness)
