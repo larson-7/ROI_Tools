@@ -5,13 +5,9 @@ import cv2
 from classes.point import Point
 from classes.points import Points
 from classes.rectangle import Rectangle,RectAttributes
-from classes.roi_rectangle_bare import ROIRectangle
+from classes.roi_rectangle import ROIRectangle
 
 if __name__ == "__main__":
-    def plot_rect(img, rect, color=(255, 255, 0)):
-        box = cv2.boxPoints(rect.cv_format())
-        box = np.int0(box)
-        cv2.drawContours(img, [box], -1, color, 1)
 
     v1 = Point([100, 100])
     v2 = Point([125, 100])
@@ -23,17 +19,31 @@ if __name__ == "__main__":
     imageWidth = 640
     imageHeight = 480
     cv2.namedWindow(wName)
+    cv2.setWindowProperty(wName, cv2.WND_PROP_TOPMOST, 1)
+    cv2.moveWindow(wName, 2000, 100)
+
     image = np.ones([imageHeight, imageWidth, 3], dtype=np.uint8)  # OR read an image using imread()
 
     rectangle = Rectangle(points=points)
     # plot_rect(image, rectangle, (0, 255, 0))
 
-    rectangle.rotation = np.deg2rad(45)
-    print(rectangle)
-    roi_rect = ROIRectangle(rectangle, 10)
-    roi_rect.plot(image, (0, 0, 255))
-    cv2.imshow(wName, image)
-    key = cv2.waitKey(0) & 0xFF
+    rectangle.rotation = np.deg2rad(0)
+    roi_rect = ROIRectangle(rectangle, 7)
+    cv2.setMouseCallback(wName, roi_rect.dragrect)
+
+    # keep looping until rectangle finalized
+    while True:
+        # display the image
+        cv2.imshow(wName, roi_rect.image)
+        key = cv2.waitKey(10) & 0xFF
+
+        # if returnflag is True, break from the loop
+        if roi_rect.return_flag:
+            break
+
+    # roi_rect.plot(image, (0, 0, 255))
+    # cv2.imshow(wName, image)
+    # key = cv2.waitKey(0) & 0xFF
 
     # test_rect = Rectangle(RectAttributes([100,100],10,10,0))
     # print('test rect', type(test_rect))

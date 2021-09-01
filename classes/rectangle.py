@@ -8,7 +8,6 @@ import cv2
 class RectAttributes:
     @init_args
     def __init__(self, center: Point = Point([0, 0]), width=0, height=0, rotation=0):
-        print('constructing attributes')
         self.center = center
         self.width = width
         self.height = height
