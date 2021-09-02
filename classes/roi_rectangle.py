@@ -7,7 +7,7 @@ import cv2
 
 
 class ROIRectangle:
-    def __init__(self, rectangle: Rectangle, image, window_name, box_size=5):
+    def __init__(self, rectangle: Rectangle, image, window_name, box_size=8):
         # ROI geometry
         self.rectangle = rectangle
         self.tl_selection = None
@@ -22,7 +22,7 @@ class ROIRectangle:
         self.box_size = box_size
         self.geometries = []
         # calculate selection rectangles
-        self.update()
+        self.create_selections()
         # image variables
         self.wname = window_name
         self.image = image
@@ -38,6 +38,7 @@ class ROIRectangle:
         self.active = False
         # Drag for rect resize in progress
         self.drag = False
+        self.anchor = None
 
         # Marker flags by positions
         # Top left
@@ -61,7 +62,8 @@ class ROIRectangle:
         # rectangle is being held down
         self.hold = False
 
-    def update(self):
+    def create_selections(self):
+
         self.tl_selection = Rectangle(RectAttributes(self.rectangle.tl,
                                                      self.box_size, self.box_size, self.rectangle.rotation))
 
@@ -89,8 +91,7 @@ class ROIRectangle:
         # generate a unit vector with correct direction and place rotate circle 2 box sizes normal of the TM selector
         diff = (self.rectangle.center - self.tm_selection.center)
         direction = diff/np.linalg.norm(diff)
-        self.rotate_selection = Circle(self.tm_selection.center - direction * self.box_size * 2, self.box_size)
-        print(self.rotate_selection)
+        self.rotate_selection = Circle(self.tm_selection.center - direction * self.box_size * 2, self.box_size * 1.5)
 
         # populate list of all geometries
         self.geometries.append(self.rectangle)
@@ -103,6 +104,45 @@ class ROIRectangle:
         self.geometries.append(self.bl_selection)
         self.geometries.append(self.lm_selection)
         self.geometries.append(self.rotate_selection)
+
+    def update(self):
+
+        self.tl_selection.attributes.center = self.rectangle.tl
+        self.tl_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.tr_selection.attributes.center = self.rectangle.tr
+        self.tr_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.br_selection.attributes.center = self.rectangle.br
+        self.br_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.bl_selection.attributes.center = self.rectangle.bl
+        self.bl_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.tm_selection.attributes.center = (self.rectangle.tr + self.rectangle.tl)/2
+        self.tm_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.rm_selection.attributes.center = (self.rectangle.tr + self.rectangle.br)/2
+        self.rm_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.bm_selection.attributes.center = (self.rectangle.bl + self.rectangle.br)/2
+        self.bm_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        self.lm_selection.attributes.center = (self.rectangle.tl + self.rectangle.bl)/2
+        self.lm_selection.attributes.rotation = self.rectangle.rotation
+        self.tl_selection.rect_from_attributes()
+
+        # generate a unit vector with correct direction and place rotate circle 2 box sizes normal of the TM selector
+        diff = (self.rectangle.center - self.tm_selection.center)
+        direction = diff/np.linalg.norm(diff)
+        self.rotate_selection.center = self.tm_selection.center - direction * self.box_size * 2
 
     def plot(self, image, color=(0, 255, 0), thickness=1):
         for contour in self.geometries:
@@ -132,34 +172,56 @@ class ROIRectangle:
         if self.active:
             if Points.point_inside(self.tl_selection.points, mouse_pos):
                 self.TL = True
+                return
 
             if Points.point_inside(self.tm_selection.points, mouse_pos):
                 self.TM = True
+                return
 
             if Points.point_inside(self.tr_selection.points, mouse_pos):
                 self.TR = True
-
+                return
+            print('RM Lookup')
+            print('RM: ', self.rm_selection)
+            print('Mouse: ', mouse_pos)
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
+                print('RM TRUE')
+                return
             
             if Points.point_inside(self.br_selection.points, mouse_pos):
                 self.BR = True
+                return
 
             if Points.point_inside(self.bm_selection.points, mouse_pos):
                 self.BM = True
+                return
                 
             if Points.point_inside(self.bl_selection.points, mouse_pos):
                 self.BL = True
+                return
 
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
+                return
                 
-            if Points.point_inside(self.rotate_selection.points, mouse_pos):
+            if self.rotate_selection.point_inside(mouse_pos):
                 self.Rotate = True
+                return
 
             resize = np.any([self.TL, self.TR, self.BL, self.BR, self.TM, self.BM, self.LM, self.RM])
             if resize:
                 pass
+            # If event is inside rectangle and not in any button, translate whole rectangle
+            # This has to be below all of the other conditions
+            # print(self.rectangle.points)
+            # print(mouse_pos)
+            # print(Points.point_inside(self.rectangle.points, mouse_pos))
+            if Points.point_inside(self.rectangle.points, mouse_pos) and not resize:
+                print('drag rectangle')
+                self.hold = True
+                self.anchor = mouse_pos
+                return
 
         # Rectangle hasn't been created yet, set to active and record mouse position in outRect
         else:
@@ -176,18 +238,62 @@ class ROIRectangle:
             delta = mouse_pos - self.anchor
             center = (mouse_pos + self.anchor) / 2
 
-            if delta != [0, 0]:
+            if np.linalg.norm(delta) > 20:
                 self.rectangle.attributes.width = delta.x
                 self.rectangle.attributes.height = delta.y
                 self.rectangle.attributes.center = center
                 self.rectangle.rect_from_attributes()
-                # print(self.rectangle)
                 self.update()
                 self.redraw()
+                return
+        elif self.hold:
+            delta = mouse_pos - self.rectangle.center
+            self.rectangle.points = Points.translate(self.rectangle.points, delta)
+            self.rectangle.calc_attributes()
+            self.update()
+            self.redraw()
+            return
+
+        elif self.Rotate:
+            rect_vector = self.tm_selection.center - self.rectangle.center
+            mouse_vector = mouse_pos - self.rectangle.center
+            angle = self.get_angle(rect_vector, mouse_vector)
+            self.rectangle.points = Points.rotate(self.rectangle.points, angle, self.rectangle.center)
+            self.rectangle.rotation += angle
+            self.rectangle.calc_attributes()
+            self.update()
+            self.redraw()
+            return
+
+        elif self.RM:
+            print('in rm')
+            delta = mouse_pos - self.rm_selection.center
+            self.rectangle.attributes.width = delta.x * np.cos(self.rectangle.rotation) - \
+                                              delta.y * np.sin(self.rectangle.rotation)
+            self.rectangle.calc_attributes()
+            self.update()
+            self.redraw()
+            return
+
+
+    # vector tools get angle of vector
+    @staticmethod
+    @init_args
+    def get_angle(point1: Point, point2: Point):
+        # Calculate unit vectors
+        dot = point1[0] * point2[0] + point1[1] * point2[1]  # dot product between [x1, y1] and [x2, y2]
+        det = point1[0] * point2[1] - point1[1] * point2[0]  # determinant
+        angle = np.arctan2(det, dot)  # atan2(y, x) or atan2(sin, cos)
+        return angle
 
     # Mouse was let up, drag turns off any active "button" selections
     def mouse_up(self):
         self.drag = False
+        self.TL = self.TM = self.TR = False
+        self.LM = self.RM = False
+        self.BL = self.BM = self.BR = False
+        self.Rotate = False
+        self.hold = False
 
     def redraw(self):
         self.image = self.image_display.copy()

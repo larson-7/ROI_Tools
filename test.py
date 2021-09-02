@@ -26,7 +26,7 @@ if __name__ == "__main__":
     image *= 255
     rectangle = Rectangle(points=points)
     # plot_rect(image, rectangle, (0, 255, 0))
-    roi_rect = ROIRectangle(Rectangle(RectAttributes()), image, wName)
+    roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 20, 20)), image, wName)
     cv2.setMouseCallback(wName, roi_rect.dragrect)
 
     # keep looping until rectangle finalized

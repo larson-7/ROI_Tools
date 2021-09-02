@@ -64,7 +64,7 @@ class Rectangle:
     def plot(self, image, color=(0, 255, 0), thickness=1):
         box = cv2.boxPoints(self.cv_format())
         box = np.int0(box)
-        cv2.drawContours(image, [box], -1, color, thickness)
+        cv2.drawContours(image, [box], 0, color, thickness)
 
     def rect_from_attributes(self):
         """

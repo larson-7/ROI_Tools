@@ -82,11 +82,14 @@ class Points(np.ndarray):
         """
         result = 0
 
-        for i in range(0, points.shape[0] - 1):
+        for i in range(0, points.shape[0]):
             # eqn to find which side of line segment point lies
-            test_expression = (q_point[1] - points[i][1]) * (points[i + 1][0] - points[i][0]) - \
+            if i < 3:
+                test_expression = (q_point[1] - points[i][1]) * (points[i + 1][0] - points[i][0]) - \
                               (q_point[0] - points[i][0]) * (points[i + 1][1] - points[i][1])
-
+            else:
+                test_expression = (q_point[1] - points[i][1]) * (points[0][0] - points[i][0]) - \
+                              (q_point[0] - points[i][0]) * (points[0][1] - points[i][1])
             if test_expression > 0:
                 result += 1
             elif test_expression < 0:

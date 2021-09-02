@@ -24,7 +24,7 @@ class Point(np.ndarray):
 
     @x.setter
     def x(self, x):
-        self.point[0] = x
+        self[0] = x
 
     @property
     def y(self):
@@ -32,7 +32,7 @@ class Point(np.ndarray):
 
     @y.setter
     def y(self, y):
-        self.point[1] = y
+        self[1] = y
 
     @property
     def z(self):
