@@ -33,7 +33,7 @@ if __name__ == "__main__":
     while True:
         # display the image
         cv2.imshow(wName, roi_rect.image)
-        key = cv2.waitKey(10) & 0xFF
+        key = cv2.waitKey(15) & 0xFF
 
         # if returnflag is True, break from the loop
         if roi_rect.return_flag:

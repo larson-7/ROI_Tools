@@ -111,33 +111,34 @@ class ROIRectangle:
         self.tl_selection.attributes.rotation = self.rectangle.rotation
         self.tl_selection.rect_from_attributes()
 
+
         self.tr_selection.attributes.center = self.rectangle.tr
         self.tr_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.tr_selection.rect_from_attributes()
 
         self.br_selection.attributes.center = self.rectangle.br
         self.br_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.br_selection.rect_from_attributes()
 
         self.bl_selection.attributes.center = self.rectangle.bl
         self.bl_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.bl_selection.rect_from_attributes()
 
         self.tm_selection.attributes.center = (self.rectangle.tr + self.rectangle.tl)/2
         self.tm_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.tm_selection.rect_from_attributes()
 
         self.rm_selection.attributes.center = (self.rectangle.tr + self.rectangle.br)/2
         self.rm_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.rm_selection.rect_from_attributes()
 
         self.bm_selection.attributes.center = (self.rectangle.bl + self.rectangle.br)/2
         self.bm_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.bm_selection.rect_from_attributes()
 
         self.lm_selection.attributes.center = (self.rectangle.tl + self.rectangle.bl)/2
         self.lm_selection.attributes.rotation = self.rectangle.rotation
-        self.tl_selection.rect_from_attributes()
+        self.lm_selection.rect_from_attributes()
 
         # generate a unit vector with correct direction and place rotate circle 2 box sizes normal of the TM selector
         diff = (self.rectangle.center - self.tm_selection.center)
@@ -171,22 +172,26 @@ class ROIRectangle:
         # determine if cursor is on any of the outer re-sizing 'buttons'
         if self.active:
             if Points.point_inside(self.tl_selection.points, mouse_pos):
+                print('TM True')
                 self.TL = True
                 return
 
             if Points.point_inside(self.tm_selection.points, mouse_pos):
+                print('TM True')
                 self.TM = True
                 return
-
+            # print('Test')
+            # print(mouse_pos)
+            # print(self.tr_selection.points)
             if Points.point_inside(self.tr_selection.points, mouse_pos):
+                print('TR TRUE')
                 self.TR = True
                 return
-            print('RM Lookup')
-            print('RM: ', self.rm_selection)
-            print('Mouse: ', mouse_pos)
+            # print('RM Lookup')
+            # print('RM: ', self.rm_selection)
+            # print('Mouse: ', mouse_pos)
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
-                print('RM TRUE')
                 return
             
             if Points.point_inside(self.br_selection.points, mouse_pos):
@@ -204,7 +209,11 @@ class ROIRectangle:
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
                 return
-                
+
+            if Points.point_inside(self.lm_selection.points, mouse_pos):
+                self.LM = True
+                return
+
             if self.rotate_selection.point_inside(mouse_pos):
                 self.Rotate = True
                 return
@@ -212,11 +221,9 @@ class ROIRectangle:
             resize = np.any([self.TL, self.TR, self.BL, self.BR, self.TM, self.BM, self.LM, self.RM])
             if resize:
                 pass
+
             # If event is inside rectangle and not in any button, translate whole rectangle
             # This has to be below all of the other conditions
-            # print(self.rectangle.points)
-            # print(mouse_pos)
-            # print(Points.point_inside(self.rectangle.points, mouse_pos))
             if Points.point_inside(self.rectangle.points, mouse_pos) and not resize:
                 print('drag rectangle')
                 self.hold = True
@@ -238,7 +245,7 @@ class ROIRectangle:
             delta = mouse_pos - self.anchor
             center = (mouse_pos + self.anchor) / 2
 
-            if np.linalg.norm(delta) > 20:
+            if np.linalg.norm(delta) > 10:
                 self.rectangle.attributes.width = delta.x
                 self.rectangle.attributes.height = delta.y
                 self.rectangle.attributes.center = center
@@ -246,6 +253,7 @@ class ROIRectangle:
                 self.update()
                 self.redraw()
                 return
+
         elif self.hold:
             delta = mouse_pos - self.rectangle.center
             self.rectangle.points = Points.translate(self.rectangle.points, delta)
@@ -266,11 +274,36 @@ class ROIRectangle:
             return
 
         elif self.RM:
-            print('in rm')
             delta = mouse_pos - self.rm_selection.center
-            self.rectangle.attributes.width = delta.x * np.cos(self.rectangle.rotation) - \
-                                              delta.y * np.sin(self.rectangle.rotation)
-            self.rectangle.calc_attributes()
+
+            # generate a unit vector with correct direction and multiply it by mouse delta
+            diff = (self.rm_selection.center - self.rectangle.center)
+            direction = diff / np.linalg.norm(diff)
+
+            # NOTE This is element-wise multiplication not matrix
+            directional_delta = delta * direction
+
+            # rotated_x = delta.x * np.cos(self.rectangle.rotation) - \
+            #                                   delta.y * np.sin(self.rectangle.rotation)
+            # rotated_y = delta.x * np.sin(self.rectangle.rotation) + \
+            #             delta.y * np.cos(self.rectangle.rotation)
+            # print(rotated_y)
+            if (mouse_pos.x - self.rectangle.br.x)*(self.rectangle.tr.y - self.rectangle.br.y) - \
+                    (mouse_pos.y - self.rectangle.br.y)*(self.rectangle.tr.x - self.rectangle.br.x) > 0:
+                delta_width = -np.linalg.norm(directional_delta)
+                delta_center = delta_width * direction
+            else:
+                delta_width = np.linalg.norm(directional_delta)
+                delta_center = delta_width * direction
+
+            print(f'{delta=}')
+            print(f'{diff=}')
+            print(f'{direction=}')
+            print(f'{directional_delta=}')
+
+            self.rectangle.attributes.width += delta_width
+            self.rectangle.attributes.center += 0.5 * delta_center
+            self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
             return
@@ -288,12 +321,13 @@ class ROIRectangle:
 
     # Mouse was let up, drag turns off any active "button" selections
     def mouse_up(self):
-        self.drag = False
-        self.TL = self.TM = self.TR = False
-        self.LM = self.RM = False
-        self.BL = self.BM = self.BR = False
-        self.Rotate = False
-        self.hold = False
+        if self.active or (self.rectangle.attributes.width > 10 and self.rectangle.attributes.height > 10):
+            self.drag = False
+            self.TL = self.TM = self.TR = False
+            self.LM = self.RM = False
+            self.BL = self.BM = self.BR = False
+            self.Rotate = False
+            self.hold = False
 
     def redraw(self):
         self.image = self.image_display.copy()
