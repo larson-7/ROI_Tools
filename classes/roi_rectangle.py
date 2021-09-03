@@ -172,52 +172,35 @@ class ROIRectangle:
         # determine if cursor is on any of the outer re-sizing 'buttons'
         if self.active:
             if Points.point_inside(self.tl_selection.points, mouse_pos):
-                print('TM True')
                 self.TL = True
                 return
-
             if Points.point_inside(self.tm_selection.points, mouse_pos):
-                print('TM True')
                 self.TM = True
                 return
-            # print('Test')
-            # print(mouse_pos)
-            # print(self.tr_selection.points)
             if Points.point_inside(self.tr_selection.points, mouse_pos):
-                print('TR TRUE')
                 self.TR = True
                 return
-            # print('RM Lookup')
-            # print('RM: ', self.rm_selection)
-            # print('Mouse: ', mouse_pos)
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
                 return
-            
             if Points.point_inside(self.br_selection.points, mouse_pos):
                 self.BR = True
                 return
-
             if Points.point_inside(self.bm_selection.points, mouse_pos):
                 self.BM = True
                 return
-                
             if Points.point_inside(self.bl_selection.points, mouse_pos):
                 self.BL = True
                 return
-
             if Points.point_inside(self.rm_selection.points, mouse_pos):
                 self.RM = True
                 return
-
             if Points.point_inside(self.lm_selection.points, mouse_pos):
                 self.LM = True
                 return
-
             if self.rotate_selection.point_inside(mouse_pos):
                 self.Rotate = True
                 return
-
             resize = np.any([self.TL, self.TR, self.BL, self.BR, self.TM, self.BM, self.LM, self.RM])
             if resize:
                 pass
@@ -283,11 +266,7 @@ class ROIRectangle:
             # NOTE This is element-wise multiplication not matrix
             directional_delta = delta * direction
 
-            # rotated_x = delta.x * np.cos(self.rectangle.rotation) - \
-            #                                   delta.y * np.sin(self.rectangle.rotation)
-            # rotated_y = delta.x * np.sin(self.rectangle.rotation) + \
-            #             delta.y * np.cos(self.rectangle.rotation)
-            # print(rotated_y)
+            # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.rectangle.br.x)*(self.rectangle.tr.y - self.rectangle.br.y) - \
                     (mouse_pos.y - self.rectangle.br.y)*(self.rectangle.tr.x - self.rectangle.br.x) > 0:
                 delta_width = -np.linalg.norm(directional_delta)
@@ -296,10 +275,31 @@ class ROIRectangle:
                 delta_width = np.linalg.norm(directional_delta)
                 delta_center = delta_width * direction
 
-            print(f'{delta=}')
-            print(f'{diff=}')
-            print(f'{direction=}')
-            print(f'{directional_delta=}')
+            self.rectangle.attributes.width += delta_width
+            self.rectangle.attributes.center += 0.5 * delta_center
+            self.rectangle.rect_from_attributes()
+            self.update()
+            self.redraw()
+            return
+
+        elif self.LM:
+            delta = self.lm_selection.center - mouse_pos
+
+            # generate a unit vector with correct direction and multiply it by mouse delta
+            diff = (self.lm_selection.center - self.rectangle.center)
+            direction = diff / np.linalg.norm(diff)
+
+            # NOTE This is element-wise multiplication not matrix
+            directional_delta = delta * direction
+
+            # check which direction of the selector the mouse is on, need to do this because of 360 rotation
+            if (mouse_pos.x - self.rectangle.tl.x)*(self.rectangle.bl.y - self.rectangle.tl.y) - \
+                    (mouse_pos.y - self.rectangle.tl.y)*(self.rectangle.bl.x - self.rectangle.tl.x) > 0:
+                delta_width = -np.linalg.norm(directional_delta)
+                delta_center = delta_width * direction
+            else:
+                delta_width = np.linalg.norm(directional_delta)
+                delta_center = delta_width * direction
 
             self.rectangle.attributes.width += delta_width
             self.rectangle.attributes.center += 0.5 * delta_center
