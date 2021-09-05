@@ -16,24 +16,42 @@ if __name__ == "__main__":
     points = Points([v1, v2, v3, v4])
 
     wName = "test display"
-    imageWidth = 640
-    imageHeight = 480
+    image_dir = 'images'
+    image_name = 'battery.JPG'
+    image_filepath = os.path.join(image_dir, image_name)
+    weld_img = cv2.imread(image_filepath)
+
+    scale_percent = 20  # percent of original size
+    width = int(weld_img.shape[1] * scale_percent / 100)
+    height = int(weld_img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+
+    # resize image
+    resized = cv2.resize(weld_img, dim, interpolation=cv2.INTER_AREA)
+    image = weld_img
+
+    imageWidth = image.shape[0]
+    imageHeight = image.shape[1]
+    imageChannel = image.shape[2]
+
     cv2.namedWindow(wName)
     cv2.setWindowProperty(wName, cv2.WND_PROP_TOPMOST, 1)
     cv2.moveWindow(wName, 2000, 100)
 
-    image = np.ones([imageHeight, imageWidth, 3], dtype=np.uint8)  # OR read an image using imread()
-    image *= 255
-    rectangle = Rectangle(points=points)
-    # plot_rect(image, rectangle, (0, 255, 0))
-    roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 20, 20)), image, wName)
-    cv2.setMouseCallback(wName, roi_rect.dragrect)
 
+
+    # image = np.ones([imageHeight, imageWidth, imageChannel], dtype=np.uint8)  # OR read an image using imread()
+    # image *= 255
+    rectangle = Rectangle(points=points)
+    roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 200, 200)), image, wName, box_size=50)
+    cv2.setMouseCallback(wName, roi_rect.dragrect)
     # keep looping until rectangle finalized
     while True:
-        # display the image
-        cv2.imshow(wName, roi_rect.image)
-        key = cv2.waitKey(15) & 0xFF
+        if roi_rect.updateimg:
+            # display the image
+            cv2.imshow(wName, roi_rect.image)
+            roi_rect.updateimg = False
+        key = cv2.waitKey(1) & 0xFF
 
         # if returnflag is True, break from the loop
         if roi_rect.return_flag:
