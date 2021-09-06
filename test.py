@@ -19,7 +19,7 @@ if __name__ == "__main__":
     image_dir = 'images'
     image_name = 'battery.JPG'
     image_filepath = os.path.join(image_dir, image_name)
-    load_img = False
+    load_img = True
 
     if load_img:
         weld_img = cv2.imread(image_filepath)
@@ -28,12 +28,12 @@ if __name__ == "__main__":
         width = int(weld_img.shape[1] * scale_percent / 100)
         height = int(weld_img.shape[0] * scale_percent / 100)
         dim = (width, height)
-
+        print(dim)
         # resize image
         resized = cv2.resize(weld_img, dim, interpolation=cv2.INTER_AREA)
-        image = weld_img
-        imageWidth = image.shape[0]
-        imageHeight = image.shape[1]
+        image = resized
+        imageWidth = image.shape[1]
+        imageHeight = image.shape[0]
         imageChannel = image.shape[2]
     else:
         imageWidth = 480

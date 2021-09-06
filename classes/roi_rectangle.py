@@ -30,8 +30,9 @@ class ROIRectangle:
         self.wname = window_name
         self.image = image
         self.image_display = self.image.copy()
+        self.img_center = (image.shape[1]/2, image.shape[0]/2)
         # bounding rectangle of image window
-        self.keep_within = Rectangle(RectAttributes((image.shape[0]/2, image.shape[1]/2), image.shape[0],
+        self.keep_within = Rectangle(RectAttributes(self.img_center, image.shape[0],
                                                     image.shape[1]))
         # Return flag
         self.return_flag = False
@@ -216,16 +217,13 @@ class ROIRectangle:
             # If event is inside rectangle and not in any button, translate whole rectangle
             # This has to be below all of the other conditions
             if Points.point_inside(self.rectangle.points, mouse_pos):
-                print('drag rectangle')
                 self.hold = True
                 self.anchor = mouse_pos
                 return
 
         # Rectangle hasn't been created yet, set to active and record mouse position in outRect
         else:
-            print('creating rectangle')
             self.anchor = mouse_pos
-            print(self.rectangle.tl)
             self.drag = True
             self.active = True
             return
@@ -370,27 +368,33 @@ class ROIRectangle:
             return
 
         elif self.TR:
-            delta = mouse_delta
 
             # generate a unit vector with correct direction and multiply it by mouse delta
             diff = (self.tr_selection.center - self.rectangle.center)
             direction = diff / np.linalg.norm(diff)
 
             # NOTE This is element-wise multiplication not matrix
-            directional_delta = delta * direction
+            directional_delta = mouse_delta * direction
             magnitude_vector = np.linalg.norm(directional_delta)
+            sin = np.sin(self.rectangle.rotation)
+            cos = np.cos(self.rectangle.rotation)
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.tr_selection.br.x)*(self.tr_selection.tl.y - self.tr_selection.br.y) - \
                     (mouse_pos.y - self.tr_selection.br.y)*(self.tr_selection.tl.x - self.tr_selection.br.x) > 0:
+                # shrink rectangle
                 delta_width = -magnitude_vector
                 delta_height = -magnitude_vector
-                delta_center = 0.5 * np.array([-magnitude_vector, magnitude_vector])
+                x_comp = -magnitude_vector * cos - (magnitude_vector * sin)
+                y_comp = -magnitude_vector * sin + (magnitude_vector * cos)
 
             else:
+                # expand rectangle
                 delta_width = magnitude_vector
                 delta_height = magnitude_vector
-                delta_center = 0.5 * np.array([magnitude_vector, -magnitude_vector])
+                x_comp = magnitude_vector * cos - (-magnitude_vector * sin)
+                y_comp = magnitude_vector * sin + (-magnitude_vector * cos)
+            delta_center = 0.5 * np.array([x_comp, y_comp])
 
             self.rectangle.attributes.height += delta_height
             self.rectangle.attributes.width += delta_width
@@ -398,6 +402,7 @@ class ROIRectangle:
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.TL:
@@ -445,26 +450,24 @@ class ROIRectangle:
             # NOTE This is element-wise multiplication not matrix
             directional_delta = mouse_delta * direction
             magnitude_vector = np.linalg.norm(directional_delta)
-            print(magnitude_vector)
             sin = np.sin(self.rectangle.rotation)
             cos = np.cos(self.rectangle.rotation)
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
-            if (mouse_pos.x - self.bl_selection.bl.x) * (self.bl_selection.tr.y - self.bl_selection.bl.y) - \
-                    (mouse_pos.y - self.bl_selection.bl.y) * (self.bl_selection.tr.x - self.bl_selection.bl.x) > 0:
+            if (mouse_pos.x - self.bl_selection.tl.x) * (self.bl_selection.br.y - self.bl_selection.tl.y) - \
+                    (mouse_pos.y - self.bl_selection.tl.y) * (self.bl_selection.br.x - self.bl_selection.tl.x) > 0:
                 # shrink rectangle
                 delta_width = -magnitude_vector
                 delta_height = -magnitude_vector
-                x_comp = magnitude_vector * cos - (magnitude_vector * sin)
-                y_comp = -magnitude_vector * sin + (-magnitude_vector * cos)
+                x_comp = magnitude_vector * cos - (-magnitude_vector * sin)
+                y_comp = magnitude_vector * sin + (-magnitude_vector * cos)
 
             else:
                 # expand rectangle
-                print('expand')
                 delta_width = magnitude_vector
                 delta_height = magnitude_vector
-                x_comp = -magnitude_vector * cos - (-magnitude_vector * sin)
-                y_comp = magnitude_vector * sin + (magnitude_vector * cos)
+                x_comp = -magnitude_vector * cos - (magnitude_vector * sin)
+                y_comp = -magnitude_vector * sin + (magnitude_vector * cos)
             delta_center = 0.5 * np.array([x_comp, y_comp])
 
             self.rectangle.attributes.height += delta_height
@@ -488,20 +491,20 @@ class ROIRectangle:
             cos = np.cos(self.rectangle.rotation)
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
-            if (mouse_pos.x - self.tl_selection.tr.x) * (self.tl_selection.bl.y - self.tl_selection.tr.y) - \
-                    (mouse_pos.y - self.tl_selection.tr.y) * (self.tl_selection.bl.x - self.tl_selection.tr.x) > 0:
+            if (mouse_pos.x - self.br_selection.bl.x) * (self.br_selection.tr.y - self.br_selection.bl.y) - \
+                    (mouse_pos.y - self.br_selection.bl.y) * (self.br_selection.tr.x - self.br_selection.bl.x) > 0:
                 # shrink rectangle
                 delta_width = -magnitude_vector
                 delta_height = -magnitude_vector
-                x_comp = magnitude_vector * cos - (magnitude_vector * sin)
-                y_comp = magnitude_vector * sin + (magnitude_vector * cos)
+                x_comp = -magnitude_vector * cos - (-magnitude_vector * sin)
+                y_comp = -magnitude_vector * sin + (-magnitude_vector * cos)
 
             else:
                 # expand rectangle
                 delta_width = magnitude_vector
                 delta_height = magnitude_vector
-                x_comp = -magnitude_vector * cos - (-magnitude_vector * sin)
-                y_comp = -magnitude_vector * sin + (-magnitude_vector * cos)
+                x_comp = magnitude_vector * cos - (magnitude_vector * sin)
+                y_comp = magnitude_vector * sin + (magnitude_vector * cos)
             delta_center = 0.5 * np.array([x_comp, y_comp])
 
             self.rectangle.attributes.height += delta_height
@@ -521,7 +524,8 @@ class ROIRectangle:
             self.redraw()
             return
         if Points.point_inside(self.rectangle.points, mouse_pos):
-            self.rectangle.center = self.keep_within.center
+
+            self.rectangle.center = self.img_center
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
