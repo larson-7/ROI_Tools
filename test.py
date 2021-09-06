@@ -19,20 +19,31 @@ if __name__ == "__main__":
     image_dir = 'images'
     image_name = 'battery.JPG'
     image_filepath = os.path.join(image_dir, image_name)
-    weld_img = cv2.imread(image_filepath)
+    load_img = False
 
-    scale_percent = 20  # percent of original size
-    width = int(weld_img.shape[1] * scale_percent / 100)
-    height = int(weld_img.shape[0] * scale_percent / 100)
-    dim = (width, height)
+    if load_img:
+        weld_img = cv2.imread(image_filepath)
 
-    # resize image
-    resized = cv2.resize(weld_img, dim, interpolation=cv2.INTER_AREA)
-    image = weld_img
+        scale_percent = 20  # percent of original size
+        width = int(weld_img.shape[1] * scale_percent / 100)
+        height = int(weld_img.shape[0] * scale_percent / 100)
+        dim = (width, height)
 
-    imageWidth = image.shape[0]
-    imageHeight = image.shape[1]
-    imageChannel = image.shape[2]
+        # resize image
+        resized = cv2.resize(weld_img, dim, interpolation=cv2.INTER_AREA)
+        image = weld_img
+        imageWidth = image.shape[0]
+        imageHeight = image.shape[1]
+        imageChannel = image.shape[2]
+    else:
+        imageWidth = 480
+        imageHeight = 600
+        imageChannel = 3
+        image = np.ones([imageHeight, imageWidth, imageChannel], dtype=np.uint8)  # OR read an image using imread()
+        image *= 255
+
+    scale_factor = 0.025
+    box_size = imageWidth * scale_factor
 
     cv2.namedWindow(wName)
     cv2.setWindowProperty(wName, cv2.WND_PROP_TOPMOST, 1)
@@ -40,10 +51,10 @@ if __name__ == "__main__":
 
 
 
-    # image = np.ones([imageHeight, imageWidth, imageChannel], dtype=np.uint8)  # OR read an image using imread()
-    # image *= 255
+
     rectangle = Rectangle(points=points)
-    roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 200, 200)), image, wName, box_size=50)
+    roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 200, 200)), image, wName, box_size=box_size,
+                            thickness=box_size/5)
     cv2.setMouseCallback(wName, roi_rect.dragrect)
     # keep looping until rectangle finalized
     while True:
