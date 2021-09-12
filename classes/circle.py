@@ -6,7 +6,6 @@ import cv2
 class Circle:
     @init_args
     def __init__(self, center: Point = Point([0, 0]), diameter=0):
-        print('creating circle: ', center)
         self.center = center
         self.diameter = diameter
 

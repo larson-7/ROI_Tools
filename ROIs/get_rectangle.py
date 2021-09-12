@@ -9,13 +9,7 @@ from classes.roi_rectangle import ROIRectangle
 
 if __name__ == "__main__":
 
-    v1 = Point([100, 100])
-    v2 = Point([125, 100])
-    v3 = Point([125, 125])
-    v4 = Point([100, 125])
-    points = Points([v1, v2, v3, v4])
-
-    wName = "test display"
+    wName = "Place Rectangle"
     image_dir = 'images'
     image_name = 'battery.JPG'
     image_filepath = os.path.join(image_dir, image_name)
@@ -24,11 +18,10 @@ if __name__ == "__main__":
     if load_img:
         weld_img = cv2.imread(image_filepath)
 
-        scale_percent = 20  # percent of original size
+        scale_percent = 30  # percent of original size
         width = int(weld_img.shape[1] * scale_percent / 100)
         height = int(weld_img.shape[0] * scale_percent / 100)
         dim = (width, height)
-        print(dim)
         # resize image
         resized = cv2.resize(weld_img, dim, interpolation=cv2.INTER_AREA)
         image = resized
@@ -47,12 +40,8 @@ if __name__ == "__main__":
 
     cv2.namedWindow(wName)
     cv2.setWindowProperty(wName, cv2.WND_PROP_TOPMOST, 1)
-    cv2.moveWindow(wName, 2000, 100)
+    # cv2.moveWindow(wName, 2000, 100)
 
-
-
-
-    rectangle = Rectangle(points=points)
     roi_rect = ROIRectangle(Rectangle(RectAttributes([100, 100], 200, 200)), image, wName, box_size=box_size,
                             thickness=box_size/5)
     cv2.setMouseCallback(wName, roi_rect.dragrect)
@@ -63,15 +52,12 @@ if __name__ == "__main__":
             cv2.imshow(wName, roi_rect.image)
             roi_rect.updateimg = False
         key = cv2.waitKey(1) & 0xFF
+        if key == 27:
+            break
+        if key == 13:
+            print(roi_rect.rectangle)
+            break
 
         # if returnflag is True, break from the loop
         if roi_rect.return_flag:
             break
-
-    # roi_rect.plot(image, (0, 0, 255))
-    # cv2.imshow(wName, image)
-    # key = cv2.waitKey(0) & 0xFF
-
-    # test_rect = Rectangle(RectAttributes([100,100],10,10,0))
-    # print('test rect', type(test_rect))
-    # roi = ROIRectangle(test_rect)

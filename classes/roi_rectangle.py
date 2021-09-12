@@ -32,8 +32,11 @@ class ROIRectangle:
         self.image_display = self.image.copy()
         self.img_center = (image.shape[1]/2, image.shape[0]/2)
         # bounding rectangle of image window
-        self.keep_within = Rectangle(RectAttributes(self.img_center, image.shape[0],
-                                                    image.shape[1]))
+        print(self.img_center)
+        print(image.shape)
+        self.keep_within = Rectangle(RectAttributes(self.img_center, image.shape[1],
+                                                    image.shape[0]))
+        print(self.keep_within)
         # Return flag
         self.return_flag = False
 
@@ -155,7 +158,6 @@ class ROIRectangle:
 
     def dragrect(self, event, x, y, flags, param):
         mouse_pos = Point([x, y])
-        # limit x & y to keep_within bounds of cv2 window
         if mouse_pos.x < self.keep_within.points[0][0]:
             mouse_pos.x = self.keep_within.points[0][0]
         if mouse_pos.y < self.keep_within.points[0][1]:
@@ -245,11 +247,12 @@ class ROIRectangle:
                 return
 
         elif self.hold:
-            delta = mouse_pos - self.rectangle.center
-            self.rectangle.points = Points.translate(self.rectangle.points, delta)
+
+            self.rectangle.points = Points.translate(self.rectangle.points, mouse_delta)
             self.rectangle.calc_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.Rotate:
@@ -264,14 +267,12 @@ class ROIRectangle:
             return
 
         elif self.RM:
-            delta = mouse_pos - self.rm_selection.center
-
             # generate a unit vector with correct direction and multiply it by mouse delta
             diff = (self.rm_selection.center - self.rectangle.center)
             direction = diff / np.linalg.norm(diff)
 
             # NOTE This is element-wise multiplication not matrix
-            directional_delta = delta * direction
+            directional_delta = mouse_delta * direction
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.rectangle.br.x)*(self.rectangle.tr.y - self.rectangle.br.y) - \
@@ -287,18 +288,16 @@ class ROIRectangle:
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.LM:
-            delta = self.lm_selection.center - mouse_pos
-
             # generate a unit vector with correct direction and multiply it by mouse delta
             diff = (self.lm_selection.center - self.rectangle.center)
             direction = diff / np.linalg.norm(diff)
 
             # NOTE This is element-wise multiplication not matrix
-            directional_delta = delta * direction
-
+            directional_delta = mouse_delta * direction
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.rectangle.tl.x)*(self.rectangle.bl.y - self.rectangle.tl.y) - \
                     (mouse_pos.y - self.rectangle.tl.y)*(self.rectangle.bl.x - self.rectangle.tl.x) > 0:
@@ -313,17 +312,16 @@ class ROIRectangle:
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.TM:
-            delta = mouse_pos - self.tm_selection.center
-
             # generate a unit vector with correct direction and multiply it by mouse delta
             diff = (self.tm_selection.center - self.rectangle.center)
             direction = diff / np.linalg.norm(diff)
 
             # NOTE This is element-wise multiplication not matrix
-            directional_delta = delta * direction
+            directional_delta = mouse_delta * direction
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.rectangle.tr.x)*(self.rectangle.tl.y - self.rectangle.tr.y) - \
@@ -339,17 +337,16 @@ class ROIRectangle:
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.BM:
-            delta = mouse_pos - self.bm_selection.center
-
             # generate a unit vector with correct direction and multiply it by mouse delta
             diff = (self.bm_selection.center - self.rectangle.center)
             direction = diff / np.linalg.norm(diff)
 
             # NOTE This is element-wise multiplication not matrix
-            directional_delta = delta * direction
+            directional_delta = mouse_delta * direction
 
             # check which direction of the selector the mouse is on, need to do this because of 360 rotation
             if (mouse_pos.x - self.rectangle.bl.x)*(self.rectangle.br.y - self.rectangle.bl.y) - \
@@ -365,6 +362,7 @@ class ROIRectangle:
             self.rectangle.rect_from_attributes()
             self.update()
             self.redraw()
+            self.prev_mouse_pos = mouse_pos
             return
 
         elif self.TR:
