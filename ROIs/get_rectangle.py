@@ -10,7 +10,7 @@ from classes.roi_rectangle import ROIRectangle
 if __name__ == "__main__":
 
     wName = "Place Rectangle"
-    image_dir = 'images'
+    image_dir = '../images'
     image_name = 'battery.JPG'
     image_filepath = os.path.join(image_dir, image_name)
     load_img = True
