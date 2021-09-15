@@ -54,6 +54,7 @@ class StepListModel(QtCore.QAbstractListModel):
 class ProgramList(QWidget):
     def __init__(self):
         super().__init__()
+        self.count = 0
         self.setWindowTitle("QTableView Example")
         self.program_list = QListView(objectName='programList')
         self.setWindowTitle("QTableView Example")
@@ -100,7 +101,6 @@ class ProgramList(QWidget):
         self.layout.addWidget(self.run_script, 5, 4, 1, 1)
 
     def get_list_index(self):
-
         indices = self.program_list.selectedIndexes()
         if indices:
             return indices[0].row()
@@ -112,12 +112,13 @@ class ProgramList(QWidget):
         Add an item to our to-do list, getting the text from the QLineEdit .todoEdit
         and then clearing it.
         """
-        self.get_list_index()
+        index = self.get_list_index()
         print(self.get_list_index())
-        text = 'test'
+        text = 'test-{0}'.format(self.count)
+        self.count += 1
         if text:  # Don't add empty strings.
             # Access the list via the model.
-            self.model.step_list.append((False, text))
+            self.model.step_list.insert(index, (False, text))
             # Trigger refresh.
             self.model.layoutChanged.emit()
             # Empty the input
@@ -134,7 +135,7 @@ class ProgramList(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # list_icon = QtGui.QIcon("bug.png")
+
     list_icon = QIcon(QApplication.style().standardIcon(QStyle.SP_ArrowBack))
     window = ProgramList()
     window.show()
