@@ -1,23 +1,47 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QListWidget, QMainWindow
+import sys, os
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QApplication, QListWidget, QMainWindow, QListView, QWidget,QGridLayout
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-class MainWindow(QMainWindow):
+tree_elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
+                 'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
+
+list_elements = ['test', 'cat', 'dog']
+icon_directory = 'images'
+icon_filename = 'bug.png'
+icon_filepath = os.path.join(icon_directory, icon_filename)
+
+
+list_icon = QtGui.QImage("bug.png")
+print(list_icon)
+
+class ProgramList(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("My App")
-        widget = QListWidget()
-        widget.addItems(["One", "Two", "Three"])
-        widget.currentItemChanged.connect(self.index_changed)
-        widget.currentTextChanged.connect(self.text_changed)
-        self.setCentralWidget(widget)
+        self.setWindowTitle("QTableView Example")
+        self.program_list = QListView()
+        self.setWindowTitle("QTableView Example")
+        self.model = QStandardItemModel(self.program_list)
 
-    def index_changed(self, i): # Not an index, i is a QListItem
-        print(i.text())
+        for list_element in list_elements:
+            item = QStandardItem(list_element)
+            self.model.appendRow(item)
+        self.program_list.setModel(list_icon, self.model)
 
-    def text_changed(self, s): # s is a str
-        print(s)
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.program_list, 0, 0)
+        self.setLayout(self.layout)
 
-app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
-app.exec_()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = ProgramList()
+    window.show()
+    app.exec_()
+
+
+
+'''
+TODO: http://pharma-sas.com/move-items-up-and-down-in-a-qlistview/
+Steal from todo_complete, add status for each item and allow for creation and deletion, add sas up and down logic
+'''
