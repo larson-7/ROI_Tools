@@ -12,6 +12,7 @@ class MyWidget(QWidget):
         self.dict_of_buttons = {}
         for i, description in enumerate(descriptions):
             self.dict_of_buttons[description] = QPushButton(description)
+            # partial allows to pass function with arguments, but not evaluate it.
             self.dict_of_buttons[description].clicked.connect(partial(self.the_button_was_clicked, description))
             layout.addWidget(self.dict_of_buttons[description], i, 0)
         self.setLayout(layout)
