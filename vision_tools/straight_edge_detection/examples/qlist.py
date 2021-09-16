@@ -79,9 +79,9 @@ class ProgramList(QWidget):
         self.add_step.clicked.connect(self.add)
         self.layout.addWidget(self.add_step, 0, 4, 1, 1)
 
-
         self.delete_step = QPushButton(objectName='delete_step')
         self.delete_step.setIcon(QIcon(os.path.join(icon_directory, delete_icon_fn)))
+        self.delete_step.clicked.connect(self.delete)
         self.layout.addWidget(self.delete_step, 1, 4, 1, 1)
 
         self.move_up = QPushButton(objectName='move_up')
@@ -107,6 +107,8 @@ class ProgramList(QWidget):
         else:
             return 0
 
+    # https://doc.qt.io/archives/qt-4.8/qabstractitemview.html#clearSelection
+
     def add(self):
         """
         Add an item to our to-do list, getting the text from the QLineEdit .todoEdit
@@ -117,12 +119,26 @@ class ProgramList(QWidget):
         text = 'test-{0}'.format(self.count)
         self.count += 1
         if text:  # Don't add empty strings.
+            print('here')
+            print(self.model.rowCount())
+            # if len(self.model) > 0:
+            #     index += 1
             # Access the list via the model.
             self.model.step_list.insert(index, (False, text))
             # Trigger refresh.
             self.model.layoutChanged.emit()
             # Empty the input
             # self.save()
+
+    def delete(self):
+        index = self.get_list_index()
+        print(index)
+        # Remove the item and refresh.
+        del self.model.step_list[index]
+        self.model.layoutChanged.emit()
+        # Clear the selection (as it is no longer valid).
+        self.program_list.clearSelection()
+        # self.save()
 
     def load(self):
         try:
