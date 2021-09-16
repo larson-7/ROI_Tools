@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex
 from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QListView, QTreeWidget
 from PyQt5.QtGui import QColor, QPalette, QIcon
 from QImageViewer import QImageViewer
+from qlist import ProgramList
 
 elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
             'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
@@ -29,48 +30,13 @@ class MyTabWidget(QTabWidget):
         for n, color in enumerate(['blue', 'purple']):
             self.addTab(Color(color), color)
 
-
-# tag::model[]
-class ProgramListModel(QAbstractListModel):
-    def __init__(self):
-        QAbstractListModel.__init__(self)
-        self.items = []
-        self.modelDict = {}
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self.items)
-
-    def data(self, index, role):
-        if not index.isValid() or not (0 <= index.row() < len(self.items)):  return QtCore.QVariant()
-        if role == Qt.DisplayRole:
-            return self.items[index.row()]
-        elif role == Qt.DecorationRole:
-            return icon
-
-
-class ListView(QListView):
-    def __init__(self):
-        super(ListView, self).__init__()
-        self.model = ProgramListModel()
-        self.model.modelDict = elements
-        self.setModel(self.model)
-
-
-class QListWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-        listview = ListView()
-        lay = QVBoxLayout(self)
-        lay.addWidget(listview)
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("My App")
         layout = QGridLayout()
         # 1
-        listview = QListWidget()
+        listview = ProgramList()
         layout.addWidget(listview, 0, 0, 2, 1)
         # layout.addWidget(Color("red"), 0, 0, 2, 1)
         # 2
