@@ -79,7 +79,6 @@ class ProgramList(QWidget):
         self.count = 0
         self.setWindowTitle("QTableView Example")
         self.program_list = QListView(objectName='programList')
-        self.setWindowTitle("QTableView Example")
         # self.model = QStandardItemModel(self.program_list)
         self.model = StepListModel()
         self.current_index = 0

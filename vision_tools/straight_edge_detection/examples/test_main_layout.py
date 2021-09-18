@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QMainWindow, QWid
 from PyQt5.QtGui import QColor, QPalette, QIcon
 from QImageViewer import QImageViewer
 from qlist import ProgramList
+from qtree import ProgramTreeItems
 
 elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
             'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
@@ -40,7 +41,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(listview, 0, 0, 2, 1)
         # layout.addWidget(Color("red"), 0, 0, 2, 1)
         # 2
-        layout.addWidget(Color("yellow"), 2, 0, 3, 1)
+        program_tree = ProgramTreeItems()
+        layout.addWidget(program_tree, 2, 0, 3, 1)
+        # layout.addWidget(Color("yellow"), 2, 0, 3, 1)
         # 3
         self.image = QImageViewer()
         # layout.addWidget(Color("green"), 0, 1, 5, 4)
