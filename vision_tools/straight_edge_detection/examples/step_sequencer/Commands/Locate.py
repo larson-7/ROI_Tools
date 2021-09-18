@@ -1,5 +1,6 @@
-from Command import Command, auto
 import sys
+sys.path.append('/step_sequencer/Commands/Command')
+from Command import Command, auto
 import os
 import cv2
 import random

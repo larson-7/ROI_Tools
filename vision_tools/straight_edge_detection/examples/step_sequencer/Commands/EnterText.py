@@ -1,5 +1,5 @@
 import sys
-
+sys.path.append('/step_sequencer/Commands/Command')
 from Command import Command, auto
 
 

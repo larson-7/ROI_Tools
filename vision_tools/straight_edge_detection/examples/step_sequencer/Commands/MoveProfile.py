@@ -1,8 +1,9 @@
+import sys
+sys.path.append('/step_sequencer/Commands/Command')
 import sqlite3
 import numpy as np
 import random
 from Command import Command, auto
-import sys
 import math
 
 class MoveProfile(Command):

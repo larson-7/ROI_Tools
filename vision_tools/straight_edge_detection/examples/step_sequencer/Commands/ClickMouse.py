@@ -10,7 +10,7 @@ class Click(Command):
         try:
             self.button = json["button"]
         except KeyError:
-            # print("Backend: Error: missing 'button' parameter, set default to left click" )
+            print("Backend: Error: missing 'button' parameter, set default to left click" )
             self.button = "left"
 
     def execute(self, commands, commands_counter):

@@ -1,4 +1,5 @@
 import sys
+sys.path.append('/step_sequencer/Commands/Command')
 import json
 from Command import Command
 import CommandsParser as parser

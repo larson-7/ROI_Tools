@@ -1,5 +1,9 @@
 import re, collections
 from operator import add, sub, mul, truediv
+import sys
+import os
+import importlib
+
 from Command import Command, auto
 
 class Calculate(Command):

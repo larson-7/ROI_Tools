@@ -1,4 +1,5 @@
 import sys
+sys.path.append('/step_sequencer/Commands/Command')
 from datetime import time
 import random
 from Command import Command, auto

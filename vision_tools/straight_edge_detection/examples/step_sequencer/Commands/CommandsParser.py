@@ -1,5 +1,5 @@
+import sys
 import importlib.util
-import inspect
 import os
 import sys
 import inspect
@@ -22,12 +22,12 @@ def load_classes():
     for cmd_file in command_filenames:
         # get rid of extension
         command_name = os.path.splitext(cmd_file)[0]
-        # load module Commands.'classname'
+
+        # Original implementation
         # module = importlib.import_module('Commands.{0}'.format(command_name))
         # module = importlib.import_module(command_name)
 
-        print('path: ', path + '/' + command_name + '.py')
-        print('command name: ', command_name)
+        # This was my workaround here for this method
         spec = importlib.util.spec_from_file_location(command_name, path + '/' + command_name + '.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)

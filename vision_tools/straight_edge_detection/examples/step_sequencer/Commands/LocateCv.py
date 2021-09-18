@@ -1,4 +1,5 @@
 import sys
+sys.path.append('/step_sequencer/Commands/Command')
 import cv2
 import numpy as np
 import random
