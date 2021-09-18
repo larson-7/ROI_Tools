@@ -1,5 +1,5 @@
 import json
-from Commands.CommandsParser import parse, load_classes
+from vision_tools.straight_edge_detection.examples.step_sequencer.OLD.Commands.CommandsParser import parse, load_classes
 import argparse
 import sys
 
