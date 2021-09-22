@@ -8,14 +8,16 @@ data = {"Image Acquisition": ["Load From File", "Acquire Image"],
 
 data = discover_steps()
 print(data)
+
+
 class ProgramTreeItems(QTreeWidget):
-    def __init__(self):
+    def __init__(self, step):
         super().__init__()
         self.setColumnCount(1)
         self.setHeaderLabels(["Available Steps"])
         items = []
         self.itemSelectionChanged.connect(self.get_current_index)
-
+        self.step = step
         for key, values in data.items():
             item = QTreeWidgetItem([key])
 
@@ -27,7 +29,7 @@ class ProgramTreeItems(QTreeWidget):
 
     def get_current_index(self):
         getSelected = self.selectedItems()
-        if getSelected.at(1):
+        if getSelected[0].parent():
             print(getSelected[0].text(0))
 
 if __name__ == "__main__":

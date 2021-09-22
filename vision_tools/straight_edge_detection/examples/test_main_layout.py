@@ -6,6 +6,7 @@ from PyQt5.QtGui import QColor, QPalette, QIcon
 from QImageViewer import QImageViewer
 from qlist import ProgramList
 from qtree import ProgramTreeItems
+from step_sequencer.step import Step
 
 elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
             'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
@@ -36,12 +37,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("My App")
         layout = QGridLayout()
+        active_step = Step()
         # 1
         listview = ProgramList()
         layout.addWidget(listview, 0, 0, 2, 1)
         # layout.addWidget(Color("red"), 0, 0, 2, 1)
         # 2
-        program_tree = ProgramTreeItems()
+        program_tree = ProgramTreeItems(active_step)
         layout.addWidget(program_tree, 2, 0, 3, 1)
         # layout.addWidget(Color("yellow"), 2, 0, 3, 1)
         # 3

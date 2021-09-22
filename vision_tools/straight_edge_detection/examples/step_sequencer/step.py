@@ -8,7 +8,7 @@ class Step:
     instances = []
     instance_count = 0
 
-    def __init__(self, json):
+    def __init__(self, json=None):
 
         if json:
             self.json = json
