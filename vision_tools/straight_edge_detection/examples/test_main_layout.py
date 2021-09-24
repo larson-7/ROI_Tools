@@ -35,7 +35,7 @@ class MyTabWidget(QTabWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("My App")
+        self.setWindowTitle("Vision Test")
         layout = QGridLayout()
         active_step = Step()
         # 1
