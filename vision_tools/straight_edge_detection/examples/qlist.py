@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QListWidget, QMainWindow, QListView, QWidget, QGridLayout, QStyle, QPushButton
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon
 from PyQt5.QtCore import Qt
+from step_sequencer.step import Step
 
 tree_elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
                  'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
@@ -26,10 +27,7 @@ CONFIGURED = 1
 RAN_SUCCESS = 2
 RAN_FAILED = 3
 
-class Step:
-    def __init__(self, status=0, text=''):
-        self.status = status
-        self.text = text
+blank_step = Step()
 
 
 class StepListModel(QtCore.QAbstractListModel):
@@ -39,7 +37,7 @@ class StepListModel(QtCore.QAbstractListModel):
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            text = self.step_list[index.row()].text
+            text = self.step_list[index.row()].name
             return text
 
         if role == Qt.DecorationRole:
@@ -74,7 +72,7 @@ class StepListModel(QtCore.QAbstractListModel):
 
 
 class ProgramList(QWidget):
-    def __init__(self):
+    def __init__(self, config_tabs, available_steps, image_viewer):
         super().__init__()
         self.count = 0
         self.setWindowTitle("QTableView Example")
@@ -82,12 +80,16 @@ class ProgramList(QWidget):
         # self.model = QStandardItemModel(self.program_list)
         self.model = StepListModel()
         self.current_index = 0
+        self.selected_program = None
+        self.config_tabs = config_tabs
+        self.available_steps = available_steps
+        self.image_viewer = image_viewer
 
         # update model with list
         self.load()
         self.program_list.setModel(self.model)
         selection_model = self.program_list.selectionModel()
-        # selection_model.selectionChanged.connect(self.get_list_index)
+        selection_model.selectionChanged.connect(self.update_config)
 
         # self.program_list.clicked[QtCore.QModelIndex].connect(self.on_clicked)
         # When you receive the signal, you call QtGui.QStandardItemModel.itemFromIndex()
@@ -136,7 +138,8 @@ class ProgramList(QWidget):
         and then clearing it.
         """
         index = self.program_list.currentIndex().row()
-        text = 'test-{0}'.format(self.count)
+
+        text = self.selected_program
         self.count += 1
         if text:  # Don't add empty strings.
             num_itmes = self.model.rowCount()
@@ -147,8 +150,10 @@ class ProgramList(QWidget):
                     index = 0
             else:
                 index += 1
-
-            self.model.step_list.insert(index, Step(0, text))
+            print(f'{text=}')
+            new_step = create_class_by_name(text, self.available_steps)
+            print(f'{new_step=}')
+            self.model.step_list.insert(index, new_step)
             # Trigger refresh.
             self.model.layoutChanged.emit()
 
@@ -189,9 +194,17 @@ class ProgramList(QWidget):
             self.program_list.setCurrentIndex(item)
 
     def runStep(self):
+        # get current index of program
         index = self.program_list.currentIndex().row()
+        # if there is a valid selection try to run step
         if 0 <= index <= self.model.rowCount() - 1:
-            self.model.run(index)
+            # get step object reference and execute step
+            active_step = self.model.step_list[index]
+            active_step.execute()
+            # set main window view to step object's image
+            self.image_viewer.setImage(active_step.image)
+
+            # update step list icons
             self.model.layoutChanged.emit()
             if index == self.model.rowCount() - 1 and self.model.status(index) == RAN_SUCCESS:
                 index = 0
@@ -225,6 +238,35 @@ class ProgramList(QWidget):
             self.model.step_list = program_status
         except Exception:
             pass
+
+    def update_config(self):
+        index = self.program_list.currentIndex().row()
+        # Focus on new item added
+        # step = self.model.index(index).data()
+        step = self.model.step_list[index]
+        print(f'{step=}')
+        self.config_tabs.step = step
+        self.config_tabs.update_tabs()
+
+
+def create_class_by_name(class_name, class_list, json=None):
+    """
+    Returns class by name from class_list dictionary
+    """
+    found = False
+    for key, values in class_list.items():
+        for value in values:
+            if class_name == str(value.__name__):
+                new_step = value(json)
+                found = True
+                break
+        if found:
+            break
+        else:
+            new_step = blank_step
+
+    return new_step
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

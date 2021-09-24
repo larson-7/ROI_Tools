@@ -1,58 +1,41 @@
 import sys
 import os
-from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex
 from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QListView, QTreeWidget
-from PyQt5.QtGui import QColor, QPalette, QIcon
 from QImageViewer import QImageViewer
 from qlist import ProgramList
 from qtree import ProgramTreeItems
-from step_sequencer.step import Step
+from qtab import ProgramConfigTabs
+from step_sequencer.step_utilities import discover_steps
 
-elements = {'Animals':{1:'Bison',2:'Panther',3:'Elephant'},'Birds':{1:'Duck',2:'Hawk',3:'Pigeon'},
-            'Fish':{1:'Shark',2:'Salmon',3:'Piranha'}}
-icon_directory = 'images'
-icon_filename = 'bug.png'
-icon_filepath = os.path.join(icon_directory, icon_filename)
+# Load all available classes
+available_steps = discover_steps()
+print(available_steps)
 
-# Placeholder widget for setting up layout
-class Color(QWidget):
-    def __init__(self, color):
-        super().__init__()
-        self.setAutoFillBackground(True)
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
-        self.setPalette(palette)
-
-
-# Creating tab widgets
-class MyTabWidget(QTabWidget):
-    def __init__(self):
-        super().__init__()
-        self.setTabPosition(QTabWidget.North)
-        for n, color in enumerate(['blue', 'purple']):
-            self.addTab(Color(color), color)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Vision Test")
+
+        # step input/output configuration
+        tabs = ProgramConfigTabs(available_steps)
+        # image viewer
+        self.image_view = QImageViewer()
+        # active program list
+        listview = ProgramList(tabs, available_steps, self.image_view)
+        # available steps
+        program_tree = ProgramTreeItems(listview, available_steps)
+
+        # Grid layout
         layout = QGridLayout()
-        active_step = Step()
         # 1
-        listview = ProgramList()
-        layout.addWidget(listview, 0, 0, 2, 1)
-        # layout.addWidget(Color("red"), 0, 0, 2, 1)
+        layout.addWidget(listview, 0, 0, 2, 2)
         # 2
-        program_tree = ProgramTreeItems(active_step)
-        layout.addWidget(program_tree, 2, 0, 3, 1)
-        # layout.addWidget(Color("yellow"), 2, 0, 3, 1)
+        layout.addWidget(program_tree, 2, 0, 3, 2)
         # 3
-        self.image = QImageViewer()
-        # layout.addWidget(Color("green"), 0, 1, 5, 4)
-        layout.addWidget(self.image, 0, 1, 5, 4)
+        layout.addWidget(self.image_view, 0, 2, 5, 4)
         # 4
-        tabs = MyTabWidget()
-        layout.addWidget(tabs, 0, 5, 5, 1)
+        layout.addWidget(tabs, 0, 6, 5, 1)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -63,16 +46,14 @@ class MainWindow(QMainWindow):
         for row in range(layout.rowCount()):
             layout.setRowStretch(row, 1)
 
-    def loadImage(self, filepath=''):
-        self.image.loadImageFromFile(filepath)
 
-app = QApplication(sys.argv)
-window = MainWindow()
-wName = "Place Rectangle"
-image_dir = 'images'
-image_name = 'battery.JPG'
-image_filepath = os.path.join(image_dir, image_name)
-icon = QIcon(icon_filepath)
-window.loadImage(image_filepath)
-window.show()
-app.exec_()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    wName = "Place Rectangle"
+    image_dir = 'images'
+    image_name = 'battery.JPG'
+    image_filepath = os.path.join(image_dir, image_name)
+    # window.loadImage(image_filepath)
+    window.show()
+    app.exec_()

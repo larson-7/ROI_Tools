@@ -3,9 +3,13 @@ import cv2
 import numpy as np
 import os
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel,QGridLayout, QTextEdit, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal
 
+UNCONFIGURED = 0
+CONFIGURED = 1
+RAN_SUCCESS = 2
+RAN_FAILED = 3
 
 class TextEdit(QTextEdit):
     clicked = pyqtSignal()
@@ -20,7 +24,7 @@ class TextEdit(QTextEdit):
     def file_browser(self):
         file_types = "Image Files (*.jpeg *.jpg *.png)"
         file_browser = QFileDialog()
-        file_name = file_browser.getOpenFileName(self, 'Open Image File', r"<Default dir>", "Image files (*.jpg *.jpeg *.png)")
+        file_name = file_browser.getOpenFileName(self, 'Open Image File', r"<Default dir>", file_types)
         return file_name[0]
 
 
@@ -35,12 +39,15 @@ class TextEdit(QTextEdit):
 
 
 class LoadImageFromFile(Step):
+    name = "Load Image From File"
     type = "Image Acquisition"
     filepath_parameter = "image_filepath"
 
     def __init__(self, json=None):
         super().__init__(json)
+        # maybe not needed now
         self.image = None
+        self.status = 0
 
         # required parameters
         try:
@@ -49,8 +56,12 @@ class LoadImageFromFile(Step):
             self.filepath = None
             print("Backend: Warning: missing '{}' parameter".format(self.filepath_parameter))
 
-    def execute(self, commands, counter):
-        self.image = cv2.imread(self.filepath)
+    def execute(self, commands=None, counter=None):
+        try:
+            self.image = cv2.imread(self.filepath)
+            self.status = RAN_SUCCESS
+        except (FileExistsError, FileNotFoundError):
+            self.status = RAN_FAILED
 
     def print(self):
         if self.image:
@@ -63,20 +74,26 @@ class LoadImageFromFile(Step):
             # Split the extension from the path and normalise it to lowercase.
             ext = os.path.splitext(self.filepath)[-1].lower()
             if ext == ".png" or ext == ".jpg":
+                self.status = CONFIGURED
                 return True
             else:
+                self.status = UNCONFIGURED
                 return False
         else:
+            self.status = UNCONFIGURED
             return False
 
     def display_inputs(self):
         input_widget = QWidget()
         file_path = TextEdit(self)
         file_path.setWindowTitle("Image Filepath")
-
+        if self.filepath:
+            file_path.setText(self.filepath)
         # grid layout settings
-        layout = QGridLayout()
-        layout.addWidget(file_path, 0, 0, 1, 1)
+        # layout = QGridLayout()
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel('File Path'))
+        layout.addWidget(file_path)
         input_widget.setLayout(layout)
 
         return input_widget

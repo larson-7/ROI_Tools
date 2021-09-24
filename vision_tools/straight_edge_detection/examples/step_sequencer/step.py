@@ -2,8 +2,13 @@ import sys
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel,QGridLayout
 
-class Step:
+UNCONFIGURED = 0
+CONFIGURED = 1
+RAN_SUCCESS = 2
+RAN_FAILED = 3
 
+class Step:
+    name = 'Default Step'
     # list to create track of all instantiated objects
     instances = []
     instance_count = 0
@@ -23,6 +28,9 @@ class Step:
                         self.instance_count += 1
                 # name command with generic command name + instance count
                 self.name = json['type'] + str(self.instance_count)
+
+        self.status = UNCONFIGURED
+        self.image = None
 
     def execute(self, commands, counter):
         pass

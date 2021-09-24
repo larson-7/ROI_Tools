@@ -2,6 +2,7 @@ import os.path
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal, QT_VERSION_STR
 from PyQt5.QtGui import QImage, QPixmap, QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QFileDialog
+from qimage2ndarray import array2qimage
 
 
 class QImageViewer(QGraphicsView):
@@ -95,7 +96,8 @@ class QImageViewer(QGraphicsView):
         elif type(image) is QImage:
             pixmap = QPixmap.fromImage(image)
         else:
-            raise RuntimeError("ImageViewer.setImage: Argument must be a QImage or QPixmap.")
+            pixmap = QPixmap.fromImage(array2qimage(image))
+            # raise RuntimeError("ImageViewer.setImage: Argument must be a QImage or QPixmap.")
         if self.hasImage():
             self._pixmapHandle.setPixmap(pixmap)
         else:
