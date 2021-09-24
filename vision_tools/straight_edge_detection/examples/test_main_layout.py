@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
         tabs = ProgramConfigTabs(available_steps)
         # image viewer
         self.image_view = QImageViewer()
+        self.image_view.setMinimumSize(700, 700)
         # active program list
         listview = ProgramList(tabs, available_steps, self.image_view)
         # available steps

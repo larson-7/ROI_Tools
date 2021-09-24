@@ -150,9 +150,7 @@ class ProgramList(QWidget):
                     index = 0
             else:
                 index += 1
-            print(f'{text=}')
             new_step = create_class_by_name(text, self.available_steps)
-            print(f'{new_step=}')
             self.model.step_list.insert(index, new_step)
             # Trigger refresh.
             self.model.layoutChanged.emit()
@@ -244,7 +242,6 @@ class ProgramList(QWidget):
         # Focus on new item added
         # step = self.model.index(index).data()
         step = self.model.step_list[index]
-        print(f'{step=}')
         self.config_tabs.step = step
         self.config_tabs.update_tabs()
 

@@ -5,6 +5,7 @@ import os
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal
+from PyQt5 import QtCore
 
 UNCONFIGURED = 0
 CONFIGURED = 1
@@ -70,6 +71,7 @@ class LoadImageFromFile(Step):
             print('image properties - Width:{0}, Height:{1}'.format(h, w))
 
     def is_valid(self):
+        print('filepath ', self.filepath)
         if self.filepath:
             # Split the extension from the path and normalise it to lowercase.
             ext = os.path.splitext(self.filepath)[-1].lower()
@@ -87,6 +89,7 @@ class LoadImageFromFile(Step):
         input_widget = QWidget()
         file_path = TextEdit(self)
         file_path.setWindowTitle("Image Filepath")
+        file_path.selectionChanged.connect(self.is_valid)
         if self.filepath:
             file_path.setText(self.filepath)
         # grid layout settings
