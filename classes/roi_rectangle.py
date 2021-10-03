@@ -32,11 +32,8 @@ class ROIRectangle:
         self.image_display = self.image.copy()
         self.img_center = (image.shape[1]/2, image.shape[0]/2)
         # bounding rectangle of image window
-        print(self.img_center)
-        print(image.shape)
         self.keep_within = Rectangle(RectAttributes(self.img_center, image.shape[1],
                                                     image.shape[0]))
-        print(self.keep_within)
         # Return flag
         self.return_flag = False
 
@@ -155,6 +152,13 @@ class ROIRectangle:
     def plot(self, image, color=(0, 255, 0), thickness=5):
         for contour in self.geometries:
             contour.plot(image, color, thickness)
+        # plot arrow on rectangle to determine normal search direction
+        arrow_start = (int(self.tl_selection.attributes.center[0]), int(self.tl_selection.attributes.center[1]))
+        arrow_end = self.tl_selection.attributes.center + (self.tm_selection.attributes.center -
+                                                           self.tl_selection.attributes.center)/2
+        cv2.arrowedLine(image, arrow_start,
+                        (int(arrow_end[0]), int(arrow_end[1])),
+                        (0, 0, 255), 3, tipLength=0.2)
 
     def dragrect(self, event, x, y, flags, param):
         mouse_pos = Point([x, y])
