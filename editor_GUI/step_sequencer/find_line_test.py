@@ -62,44 +62,53 @@ if __name__ == "__main__":
         # if returnflag is True, break from the loop
         if roi_rect.return_flag:
             break
+    cv2.destroyWindow(wName)
 
-img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
-cv2.namedWindow('output')
 
-# convert to grayscale and blur
-gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-kernel_size = 5
-blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+    img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
+    cv2.namedWindow('output')
 
-# edge detection with Canny filter
-low_threshold = 50
-high_threshold = 150
-edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+    # convert to grayscale and blur
+    gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    kernel_size = 5
+    blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
 
-# Hough Line algo
-rho = 1  # distance resolution in pixels of the Hough grid
-theta = np.pi / 180  # angular resolution in radians of the Hough grid
-threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-min_line_length = int(roi_rect.rectangle.attributes.height * 0.5)  # minimum number of pixels making up a line
-max_line_gap = 20  # maximum gap in pixels between connectable line segments
-line_image = np.copy(img2) * 0  # creating a blank to draw lines on
+    # edge detection with Canny filter
+    low_threshold = 50
+    high_threshold = 150
+    edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
 
-lines = cv2.HoughLines(edges, rho, theta, threshold)
-print(lines)
+    # Hough Line algo
+    rho = 1  # distance resolution in pixels of the Hough grid
+    theta = np.pi / 180  # angular resolution in radians of the Hough grid
+    threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+    min_line_length = int(roi_rect.rectangle.attributes.height * 0.5)  # minimum number of pixels making up a line
+    max_line_gap = 20  # maximum gap in pixels between connectable line segments
+    line_image = np.copy(img2) * 0  # creating a blank to draw lines on
 
-# Run Hough on edge detected image
-# Output "lines" is an array containing endpoints of detected line segments
-lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
-                    min_line_length, max_line_gap)
+    lines = cv2.HoughLines(edges, rho, theta, threshold)
+    print(lines)
 
-for line in lines:
-    for x1,y1,x2,y2 in line:
-        cv2.line(line_image,(x1,y1),(x2,y2),(255,0,0),5)
+    # Run Hough on edge detected image
+    # Output "lines" is an array containing endpoints of detected line segments
+    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                        min_line_length, max_line_gap)
 
-# Draw the lines on the  image
-lines_edges = cv2.addWeighted(img2, 0.8, line_image, 1, 0)
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(line_image,(x1,y1),(x2,y2),(0,255,0),5)
 
-cv2.imshow('output', lines_edges)
-key = cv2.waitKey(-1) & 0xFF
+    # Draw the lines on the  image
+    lines_edges = cv2.addWeighted(img2, 0.8, line_image, 1, 0)
+
+    cv2.imshow('output', lines_edges)
+
+    while True:
+        key = cv2.waitKey(1) & 0xFF
+        if key == 27:
+            break
+        if key == 13:
+            break
+    cv2.destroyWindow('output')
 
 
