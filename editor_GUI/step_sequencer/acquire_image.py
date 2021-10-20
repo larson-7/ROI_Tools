@@ -11,6 +11,8 @@ from PyQt5 import QtCore
 import cv2
 import os
 import sys
+import time
+
 os.environ["PYLON_CAMEMU"] = "3"
 
 # Number of images to be grabbed.
@@ -47,7 +49,6 @@ def get_cam_list():
     cam_list = []
     # Get the transport layer factory.
     tlFactory = pylon.TlFactory.GetInstance()
-
     # Get all attached devices and exit application if no device is found.
     devices = tlFactory.EnumerateDevices()
     if len(devices) == 0:
@@ -61,8 +62,7 @@ def get_cam_list():
         cam.Attach(tlFactory.CreateDevice(devices[i]))
         # Print the model name of the camera.
         cam_list.append(cam.GetDeviceInfo().GetModelName())
-
-    return cam_list
+    return cam_list, cam
 
 class AcquireImage(Step):
     type = "Image Acquisition"
@@ -72,95 +72,67 @@ class AcquireImage(Step):
     def __init__(self, json=None):
         super().__init__(json)
         self.image = None
+        self.cam_index = 0
+        self.cams, self.cam_refs = get_cam_list()
+
+    def selection_change(self, i):
+        self.cam_index = i
+
+
+    def execute(self, commands=None, counter=None):
+        start_time = time.time()
+        camera = self.cam_refs[self.cam_index]
+        print('here')
+        print(camera)
+        # Execute the software trigger, wait actively until the camera accepts the next frame trigger or until the timeout occurs.
+        if camera.WaitForFrameTriggerReady(200, pylon.TimeoutHandling_ThrowException):
+            camera.ExecuteSoftwareTrigger()
+
+        # Only the last received image is waiting in the internal output queue
+        # and is now retrieved.
+        # The grabbing continues in the background, e.g. when using hardware trigger mode.
+
+        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+
+        # Stop the grabbing.
+        camera.StopGrabbing()
+
+        if grabResult.GrabSucceeded():
+            # converting to opencv bgr format
+            converter = pylon.ImageFormatConverter()
+            converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+            converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+
+            # Access the image data
+            image = converter.Convert(grabResult)
+            self.image = image.GetArray()
+            end_time = time.time()
+            print(end_time - start_time)
+
+        grabResult.Release()
+
 
     def display_inputs(self):
-        self.combo = ComboBox(self)
-
-        def populateCombo():
-            cams = get_cam_list()
-            if len(cams) != self.combo.count() or self.combo.count() < 1:
-                self.combo.addItems(cams)
-
-
-
-
-        combo.popupAboutToBeShown.connect(populateCombo)
-
-
-
-        # combo box for list of available cameras
-        self.camera_list_box = QComboBox()
-
-
 
         input_widget = QWidget()
+        combo = ComboBox()
 
-
-
-        self.cb.addItems(["Java", "C#", "Python"])
-        self.cb.currentIndexChanged.connect(self.selectionchange)
-
-        layout.addWidget(self.cb)
-        self.setLayout(layout)
-        self.setWindowTitle("combo box demo")
-
-    def selectionchange(self, i):
-        print
-        "Items in the list are :"
-
-        for count in range(self.cb.count()):
-            print
-            self.cb.itemText(count)
-        print
-        "Current index", i, "selection changed ", self.cb.currentText()
-
-
-        file_path.setWindowTitle("Image Filepath")
-        file_path.selectionChanged.connect(self.is_valid)
-        if self.filepath:
-            file_path.setText(self.filepath)
-        # grid layout settings
-        # layout = QGridLayout()
+        # populate list of available cameras
+        if len(self.cams) != combo.count() or combo.count() < 1:
+            combo.addItems(self.cams)
+        # update cam_resource value
+        combo.currentIndexChanged.connect(self.selection_change)
+        # input layout
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('File Path'))
-        layout.addWidget(file_path)
+        layout.addWidget(combo)
         input_widget.setLayout(layout)
 
         return input_widget
 
 if __name__ == '__main__':
-
-    '''
-    A simple Program for grabing video from basler camera and converting it to opencv img.
-    Tested on Basler acA1300-200uc (USB3, linux 64bit , python 3.5)
-    '''
-
-
-    # conecting to the first available camera
-    camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-
-    # Grabing Continusely (video) with minimal delay
-    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
-    converter = pylon.ImageFormatConverter()
-
-    # converting to opencv bgr format
-    converter.OutputPixelFormat = pylon.PixelType_BGR8packed
-    converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
-
-    while camera.IsGrabbing():
-        grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-
-        if grabResult.GrabSucceeded():
-            # Access the image data
-            image = converter.Convert(grabResult)
-            img = image.GetArray()
-            cv2.namedWindow('title', cv2.WINDOW_NORMAL)
-            cv2.imshow('title', img)
-            k = cv2.waitKey(1)
-            if k == 27:
-                break
-        grabResult.Release()
-
-    # Releasing the resource
-    camera.StopGrabbing()
+    app = QApplication(sys.argv)
+    step = AcquireImage()
+    window = step.display_inputs()
+    window.show()
+    app.exec_()
 
