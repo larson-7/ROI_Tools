@@ -15,7 +15,7 @@ import time
 
 os.environ["PYLON_CAMEMU"] = "3"
 # The bandwidth used by a FireWire camera device can be limited by adjusting the packet size.
-maxCamerasToUse = 2
+maxCamerasToUse = 1
 
 #Step enumerated statues
 UNCONFIGURED = 0
@@ -47,7 +47,7 @@ def get_cam_list():
         cam.Attach(tlFactory.CreateDevice(devices[i]))
         # Print the model name of the camera.
         cam_list.append(cam.GetDeviceInfo().GetModelName())
-    return cam_list, cam
+    return cam_list, cameras
 
 class AcquireImage(Step):
     type = "Image Acquisition"
@@ -67,8 +67,20 @@ class AcquireImage(Step):
     def execute(self, commands=None, counter=None):
         start_time = time.time()
         camera = self.cam_refs[self.cam_index]
-        print('here')
-        print(camera)
+        # camera = self.cam_refs
+        # camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+
+        # Register the standard configuration event handler for enabling software triggering.
+        # The software trigger configuration handler replaces the default configuration
+        # as all currently registered configuration handlers are removed by setting the registration mode to RegistrationMode_ReplaceAll.
+        camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
+                                     pylon.Cleanup_Delete)
+        camera.Open()
+
+        # This strategy can be useful when the acquired images are only displayed on the screen.
+        camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+
+
         # Execute the software trigger, wait actively until the camera accepts the next frame trigger or until the timeout occurs.
         if camera.WaitForFrameTriggerReady(200, pylon.TimeoutHandling_ThrowException):
             camera.ExecuteSoftwareTrigger()
@@ -92,7 +104,8 @@ class AcquireImage(Step):
             image = converter.Convert(grabResult)
             self.image = image.GetArray()
             end_time = time.time()
-            print(end_time - start_time)
+            print('acqusition time', end_time - start_time)
+            self.status = RAN_SUCCESS
 
         grabResult.Release()
 

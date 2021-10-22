@@ -202,6 +202,7 @@ class ProgramList(QWidget):
 
             # update step list icons
             self.model.layoutChanged.emit()
+
             if index == self.model.rowCount() - 1 and self.model.status(index) == RAN_SUCCESS:
                 index = 0
                 for idx, step in enumerate(self.model.step_list):
@@ -221,8 +222,12 @@ class ProgramList(QWidget):
         self.program_list.setCurrentIndex(item)
         end_index = self.model.rowCount()
         for index in range(end_index):
+            self.runStep()
             self.model.run(index)
+            self.program_list.setCurrentIndex(self.model.index(index))
             self.model.layoutChanged.emit()
+
+
         item = self.model.index(end_index - 1)
         self.program_list.setCurrentIndex(item)
 
