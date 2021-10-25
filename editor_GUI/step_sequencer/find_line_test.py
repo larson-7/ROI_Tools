@@ -5,15 +5,32 @@ import time
 import cv2
 from classes.point import Point
 from classes.points import Points
+from classes.line import Line
 from classes.rectangle import Rectangle, RectAttributes
 from classes.roi_rectangle import ROIRectangle
 from editor_GUI.ROIs.rotated_rect_crop import inside_rect, rect_bbx, crop_rotated_rectangle
+import enum
+
+def midpoint(x1, y1, x2, y2):
+    return (int((x1 + x2)/2), int((y1 + y2)/2))
+
+class LineSettings(enum.Enum):
+    bestScore = 0
+    firstEdge = 1
+    lastEdge = 2
+
+class EdgeSettings(enum.Enum):
+    blackToWhite = 0
+    whiteToBlack = 1
+    either = 2
+
+
 
 if __name__ == "__main__":
 
     wName = "Place Rectangle"
     image_dir = '../../images'
-    image_name = 'test2.png'
+    image_name = 'test3.png'
     image_filepath = os.path.join(image_dir, image_name)
     load_img = True
 
@@ -88,19 +105,25 @@ if __name__ == "__main__":
     line_image = np.copy(img2) * 0  # creating a blank to draw lines on
 
     lines = cv2.HoughLines(edges, rho, theta, threshold)
-    print(lines)
+    # print(lines)
 
     # Run Hough on edge detected image
     # Output "lines" is an array containing endpoints of detected line segments
     lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                         min_line_length, max_line_gap)
 
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            cv2.line(line_image,(x1,y1),(x2,y2),(0,0,255),5)
+    line_setting = LineSettings.lastEdge
+    print(lines)
+    np_lines = map(Line, lines)
+    print(np_lines)
+    for i, line in enumerate(np_lines):
+        print(line.cv_format())
+        cv_line = line.cv_format()
+        cv2.line(line_image, cv_line[0], cv_line[1], (0,0,255),5)
+        cv2.putText(line_image, 'Line: {}'.format(i), line.center.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1, cv2.LINE_AA)
 
     # Draw the lines on the  image
-    lines_edges = cv2.addWeighted(img2, 0.8, line_image, 1, 0)
+    lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
 
     cv2.imshow('output', lines_edges)
 
