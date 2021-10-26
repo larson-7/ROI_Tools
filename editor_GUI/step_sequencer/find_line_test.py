@@ -74,7 +74,6 @@ if __name__ == "__main__":
         if key == 27:
             break
         if key == 13:
-            print(roi_rect.rectangle)
             break
 
         # if returnflag is True, break from the loop
@@ -83,6 +82,7 @@ if __name__ == "__main__":
 
     cv2.destroyWindow(wName)
     time.sleep(0.5)
+    # TODO: Doesnt handle rotated upside down slightly rotated crop correctly
     img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
     cv2.namedWindow('output')
 
@@ -95,32 +95,71 @@ if __name__ == "__main__":
     low_threshold = 50
     high_threshold = 150
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+    cv2.imshow('canny', edges)
 
     # Hough Line algo
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = np.pi / 180  # angular resolution in radians of the Hough grid
     threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-    min_line_length = int(roi_rect.rectangle.attributes.height * 0.5)  # minimum number of pixels making up a line
+    #TODO : put this back to 0.50, should only be trying to find the line close to the size of the ROI
+    min_line_length = int(roi_rect.rectangle.attributes.height * 0.25)  # minimum number of pixels making up a line
+    print(min_line_length)
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
     line_image = np.copy(img2) * 0  # creating a blank to draw lines on
 
-    lines = cv2.HoughLines(edges, rho, theta, threshold)
-    # print(lines)
+    # lines = cv2.HoughLines(edges, rho, theta, threshold)
 
     # Run Hough on edge detected image
     # Output "lines" is an array containing endpoints of detected line segments
     lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                         min_line_length, max_line_gap)
-
-    line_setting = LineSettings.lastEdge
-    print(lines)
-    np_lines = map(Line, lines)
-    print(np_lines)
+    print(len(lines))
+    # create list of Line objects
+    np_lines = [Line(x) for x in lines]
+    # plot all lines in red
     for i, line in enumerate(np_lines):
-        print(line.cv_format())
         cv_line = line.cv_format()
         cv2.line(line_image, cv_line[0], cv_line[1], (0,0,255),5)
-        cv2.putText(line_image, 'Line: {}'.format(i), line.center.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.putText(line_image, 'Line: {}'.format(i), line.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255), 1, cv2.LINE_AA)
+    # ###############
+    # Edge Polarity
+    # ###############
+
+
+    # ###############
+    # Edge Selection
+    # ###############
+
+    # edge detection algo
+    line_setting = LineSettings.firstEdge
+    # best score
+    if line_setting.value == 0:
+        line_to_plot = np_lines[0]
+    # first edge
+    elif line_setting.value == 1:
+        value = 0
+        search_idx = 0
+        for i, line in enumerate(np_lines):
+            print(line.center.x)
+            if line.center.x < value or i == 0:
+                value = line.center.x
+                search_idx = i
+        line_to_plot = np_lines[search_idx]
+    # last edge
+    elif line_setting.value == 2:
+        value = 0
+        search_idx = 0
+        for i, line in enumerate(np_lines):
+            if line.center.x > value or i == 0:
+                value = line.center.x
+                search_idx = i
+        line_to_plot = np_lines[search_idx]
+
+    # plot selected line
+    cv_line = line_to_plot.cv_format()
+    cv2.line(line_image, cv_line[0], cv_line[1], (0, 255, 0), 5)
+    cv2.putText(line_image, 'Line: {}'.format(i), line_to_plot.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
+                (0, 255, 0), 1, cv2.LINE_AA)
 
     # Draw the lines on the  image
     lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
