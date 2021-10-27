@@ -115,7 +115,6 @@ def crop_rectangle(image, rect):
 
 def crop_rotated_rectangle(image, rect):
     # Crop a rotated rectangle from a image
-
     num_rows = image.shape[0]
     num_cols = image.shape[1]
     if not inside_rect(rect=rect, num_cols=num_cols, num_rows=num_rows):

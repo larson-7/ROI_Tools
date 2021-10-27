@@ -10,12 +10,25 @@ test_1d_rev = np.array([[1],[2],[3],[4]])
 
 test_line = np.array([points[1], points[2]])
 test_center = (test_line[0] + test_line[1])/2
-dx = test_line[1][0] - test_center[0]
-dy = test_line[1][1] - test_center[1]
-norm = np.array([dx, dy])/np.linalg.norm(np.array([test_center, [dx, dy]])) + test_center
-print(norm)
-xn = [test_center[0], norm[0]]
-yn = [test_center[1], norm[1]]
+# dx = test_line[1][0] - test_center[0]
+# dy = test_line[1][1] - test_center[1]
+
+# A - B
+dx = test_line[1][0] - test_line[0][0]
+dy = test_line[1][1] - test_line[0][1]
+# resultant array
+r = np.array([dx, dy])
+# left normal result
+rnl = np.array([-r[1], r[0]])
+# right normal result
+rnr = np.array([r[1], -r[0]])
+# get magnitude
+norm = np.linalg.norm(rnl)
+# unit vector translated to center of line
+norm_vectors = np.array([rnl, rnr]) * (1/norm) + test_center
+
+
+xn, yn = norm_vectors.T
 xl, yl = test_line.T
 x,y = points.T
 
