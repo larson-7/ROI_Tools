@@ -83,7 +83,7 @@ if __name__ == "__main__":
     cv2.destroyWindow(wName)
     time.sleep(0.5)
     img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
-    cv2.imshow('rotated rect', img2)
+    # cv2.imshow('rotated rect', img2)
     cv2.namedWindow('output')
 
     # convert to grayscale and blur
@@ -120,14 +120,39 @@ if __name__ == "__main__":
         cv2.line(line_image, cv_line[0], cv_line[1], (0, 0, 255), 1)
         cv2.putText(line_image, 'Line: {}'.format(i), line.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                     1, cv2.LINE_AA)
+    del_index = []
+    # TODO Functionize all line threshold tools, allow for plotting or not and enable debugging or not
+    if len(np_lines) > 0:
+        # ###############
+        # Edge Angle
+        # ###############
+        del_index.clear()
+        angle_threshold = 5     # degrees +/-
+
+        # delete any lines that are out of range
+        for i, line in enumerate(np_lines):
+            line_angle = np.rad2deg((line.get_angle())) + 90     # degrees
+
+            if line_angle < - angle_threshold or line_angle > angle_threshold:
+                # print('delete index {}'.format(i), line_angle)
+                del_index.append(i)
+            else:
+                pass
+                # print('keep index {}'.format(i), line_angle)
+        # create new array of in range values
+        filtered_np_lines = [x for i, x in enumerate(np_lines) if i not in del_index]
+        np_lines = filtered_np_lines[:]
+        filtered_np_lines.clear()
+        del_index.clear()
 
     # ###############
     # Edge Polarity
     # ###############
-    edge_setting = EdgeSettings.either
+    edge_setting = EdgeSettings.blackToWhite
 
     # if edge polarity is set to either, skip all polarity checks
     if edge_setting.value != 0:
+
         for i, line in enumerate(np_lines):
             # get normal vectors (l,r) about center point
             start, end = line.get_norm_vectors(scale=5)
@@ -148,32 +173,27 @@ if __name__ == "__main__":
             if sum(gradient)/len(gradient) > 0:
                 # white to black, delete
                 if edge_setting.value == 2:
-                    del np_lines[i]
-                    break
+                    del_index.append(i)
+                    continue
             # white to black case
             else:
                 # black to white, delete
                 if edge_setting.value == 1:
-                    del np_lines[i]
-                    break
+                    del_index.append(i)
+                    continue
             # plot normal search path
             cv2.line(line_image, start, end, (255, 0, 255), 1)
-
-    # plot all lines in red
-    for i, line in enumerate(np_lines):
-        cv_line = line.cv_format()
-        cv2.line(line_image, cv_line[0], cv_line[1], (0, 255, 255), 1)
-        cv2.putText(line_image, 'Line: {}'.format(i), line.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
-                    1, cv2.LINE_AA)
+        # create new array of in range values
+        filtered_np_lines = [x for i, x in enumerate(np_lines) if i not in del_index]
+        print(len(filtered_np_lines))
+        np_lines = filtered_np_lines[:]
 
     if len(np_lines) > 0:
-
         # ###############
         # Edge Selection
         # ###############
+        line_setting = LineSettings.lastEdge
 
-        # edge detection algo
-        line_setting = LineSettings.firstEdge
         # best score
         if line_setting.value == 0:
             line_to_plot = np_lines[0]
