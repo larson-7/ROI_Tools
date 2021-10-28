@@ -82,7 +82,6 @@ if __name__ == "__main__":
 
     cv2.destroyWindow(wName)
     time.sleep(0.5)
-    # TODO: Doesnt handle rotated upside down slightly rotated crop correctly
     img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
     cv2.imshow('rotated rect', img2)
     cv2.namedWindow('output')

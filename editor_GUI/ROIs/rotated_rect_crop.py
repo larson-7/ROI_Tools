@@ -121,7 +121,7 @@ def crop_rotated_rectangle(image, rect):
         print("Proposed rectangle is not fully in the image.")
         return None
 
-    rotated_angle = rect.attributes.rotation
+    rotated_angle = np.rad2deg(rect.attributes.rotation)
 
     rect_bbx_upright = rect_bbx(rect=rect)
     rect_bbx_upright_image = crop_rectangle(image=image, rect=rect_bbx_upright)
