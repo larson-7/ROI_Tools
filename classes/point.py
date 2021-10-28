@@ -18,6 +18,9 @@ class Point(np.ndarray):
         obj = np.asarray(input_array, dtype='f').view(cls)
         return obj
 
+    def cv_format(self):
+        return int(self[0]), int(self[1])
+
     @property
     def x(self):
         return self[0]

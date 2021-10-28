@@ -16,7 +16,14 @@ def init_args(method):
         # ensure all inputted arguments match hinted types, if not construct object
         for hint in hints:
             if hint in func_args:
-                if not isinstance(type(func_args[hint]), hints[hint]):
+                # bandaid fix because the initial assertion fails with a numpy array
+                is_type = False
+                try:
+                    is_type = isinstance(type(func_args[hint]), hints[hint])
+                except TypeError:
+                    is_type = type(func_args[hint]) is hints[hint].__args__[0]
+
+                if not is_type:
                     func_args[hint] = hints[hint](func_args[hint])
         args = func_args.values()
         result = method(*args)
