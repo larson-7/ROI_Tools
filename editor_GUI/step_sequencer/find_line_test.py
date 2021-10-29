@@ -12,6 +12,7 @@ from editor_GUI.ROIs.rotated_rect_crop import inside_rect, rect_bbx, crop_rotate
 import enum
 from skimage.draw import line as sciline
 
+
 def midpoint(x1, y1, x2, y2):
     return (int((x1 + x2)/2), int((y1 + y2)/2))
 
@@ -82,6 +83,7 @@ if __name__ == "__main__":
 
     cv2.destroyWindow(wName)
     time.sleep(0.5)
+    start_time = time.time()
     img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
     # cv2.imshow('rotated rect', img2)
     cv2.namedWindow('output')
@@ -224,7 +226,9 @@ if __name__ == "__main__":
 
     # Draw the lines on the  image
     lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
-
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(elapsed_time)
     cv2.imshow('output', lines_edges)
 
     while True:
