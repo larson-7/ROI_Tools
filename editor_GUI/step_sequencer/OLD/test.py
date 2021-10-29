@@ -1,3 +1,3 @@
-from editor_GUI.step_sequencer.OLD.Commands.CommandsParser import load_classes
+lst = [1,2,3]
 
-print(load_classes())
+print(lst[None])
