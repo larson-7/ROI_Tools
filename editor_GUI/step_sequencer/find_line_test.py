@@ -81,12 +81,12 @@ if __name__ == "__main__":
         if roi_rect.return_flag:
             break
 
-    cv2.destroyWindow(wName)
+    # cv2.destroyWindow(wName)
     time.sleep(0.5)
     start_time = time.time()
-    img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
-    # cv2.imshow('rotated rect', img2)
+    img2, cropped_ROI = crop_rotated_rectangle(image, roi_rect.rectangle)
     cv2.namedWindow('output')
+    cv2.imshow('rotated rect', img2)
 
     # convert to grayscale and blur
     gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -119,9 +119,14 @@ if __name__ == "__main__":
     # plot all lines in red
     for i, line in enumerate(np_lines):
         cv_line = line.cv_format()
+        print(f'{i=}', f'{line=}')
         cv2.line(line_image, cv_line[0], cv_line[1], (0, 0, 255), 1)
         cv2.putText(line_image, 'Line: {}'.format(i), line.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                     1, cv2.LINE_AA)
+
+    # Draw the lines on the  image
+    lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
+    cv2.imshow('output', lines_edges)
     del_index = []
     # TODO Functionize all line threshold tools, allow for plotting or not and enable debugging or not
     if len(np_lines) > 0:
@@ -133,14 +138,13 @@ if __name__ == "__main__":
 
         # delete any lines that are out of range
         for i, line in enumerate(np_lines):
-            line_angle = np.rad2deg((line.get_angle())) + 90     # degrees
-
-            if line_angle < - angle_threshold or line_angle > angle_threshold:
-                # print('delete index {}'.format(i), line_angle)
-                del_index.append(i)
-            else:
+            line_angle = np.rad2deg((line.get_angle())) - 90     # degrees
+            if -angle_threshold < line_angle < angle_threshold:
+                print('keep index {}'.format(i), line_angle)
                 pass
-                # print('keep index {}'.format(i), line_angle)
+            else:
+                print('delete index {}'.format(i), line_angle)
+                del_index.append(i)
         # create new array of in range values
         filtered_np_lines = [x for i, x in enumerate(np_lines) if i not in del_index]
         np_lines = filtered_np_lines[:]
@@ -150,7 +154,7 @@ if __name__ == "__main__":
     # ###############
     # Edge Polarity
     # ###############
-    edge_setting = EdgeSettings.blackToWhite
+    edge_setting = EdgeSettings.whiteToBlack
 
     # if edge polarity is set to either, skip all polarity checks
     if edge_setting.value != 0:
@@ -187,7 +191,6 @@ if __name__ == "__main__":
             cv2.line(line_image, start, end, (255, 0, 255), 1)
         # create new array of in range values
         filtered_np_lines = [x for i, x in enumerate(np_lines) if i not in del_index]
-        print(len(filtered_np_lines))
         np_lines = filtered_np_lines[:]
 
     if len(np_lines) > 0:
@@ -214,25 +217,43 @@ if __name__ == "__main__":
             search_idx = 0
             for i, line in enumerate(np_lines):
                 if line.center.x > value or i == 0:
-                    value = line.center.x
+
                     search_idx = i
             line_to_plot = np_lines[search_idx]
+            start, end = line_to_plot.cv_format()
+        cv2.line(line_image, start, end, (0, 255, 0), 1)
 
+        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, cropped_ROI.attributes.center)
+        translate = Points.translate(rotated, cropped_ROI.tl)
+        # center_offset = (crop_center - line_to_plot.center)
+        # translate_to_center = Points.translate(line_to_plot.points, center_offset)
+        # rotated = Points.rotate(translate_to_center, roi_rect.rectangle.attributes.rotation, crop_center)
+        # translate_to_center = Points.translate(rotated, -center_offset)
+        # translate = Points.translate(translate_to_center, crop_center.tl)
+
+        # translate = line_to_plot.points.translate(line_to_plot.points, roi_rect.rectangle.tl)
+        # rotated = Points.rotate(translate, -roi_rect.rectangle.attributes.rotation, crop_center)
+        translate = translate.astype(int)
+        translate_start = tuple(translate[0])
+        translate_end = tuple(translate[1])
         # plot selected line
-        cv_line = line_to_plot.cv_format()
-        cv2.line(line_image, cv_line[0], cv_line[1], (0, 255, 0), 1)
-        cv2.putText(line_image, 'Line: {}'.format(i), line_to_plot.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                    (0, 255, 0), 1, cv2.LINE_AA)
+        # cv_line = line_to_plot.cv_format()
+        cv2.line(image, translate_start, translate_end, (0, 255, 0), 3)
+        # cv2.putText(line_image, 'Line: {}'.format(i), line_to_plot.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
+        #             (0, 255, 0), 1, cv2.LINE_AA)
+        cv2.imshow(wName, image)
 
-    # Draw the lines on the  image
-    lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(elapsed_time)
-    cv2.imshow('output', lines_edges)
+        # Draw the lines on the  image
+        lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f'{elapsed_time=}')
+        cv2.imshow('output', lines_edges)
 
-    while True:
-        key = cv2.waitKey(1) & 0xFF
-        if key == 27 or key == 13:
-            break
-    cv2.destroyWindow('output')
+        while True:
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27 or key == 13:
+                break
+        cv2.destroyWindow('output')
+    else:
+        print('No Lines Found, exiting ...')

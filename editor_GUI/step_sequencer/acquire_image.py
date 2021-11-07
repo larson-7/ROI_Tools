@@ -5,7 +5,8 @@ else:
 
 from pypylon import pylon
 from pypylon import genicam
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout, QComboBox
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout, QComboBox,\
+    QFormLayout, QGroupBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 import cv2
@@ -56,7 +57,6 @@ class AcquireImage(Step):
 
     def __init__(self, json=None):
         super().__init__(json)
-        self.image = None
         self.cam_index = 0
         self.cams, self.cam_refs = get_cam_list()
 
@@ -67,8 +67,6 @@ class AcquireImage(Step):
     def execute(self, commands=None, counter=None):
         start_time = time.time()
         camera = self.cam_refs[self.cam_index]
-        # camera = self.cam_refs
-        # camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 
         # Register the standard configuration event handler for enabling software triggering.
         # The software trigger configuration handler replaces the default configuration
@@ -88,7 +86,6 @@ class AcquireImage(Step):
         # Only the last received image is waiting in the internal output queue
         # and is now retrieved.
         # The grabbing continues in the background, e.g. when using hardware trigger mode.
-
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
         # Stop the grabbing.
@@ -102,7 +99,8 @@ class AcquireImage(Step):
 
             # Access the image data
             image = converter.Convert(grabResult)
-            self.image = image.GetArray()
+            self.__class__.images[self.output_image_index] = image.GetArray()
+            self.__class__.display_image = self.__class__.images[self.output_image_index]
             end_time = time.time()
             print('acqusition time', end_time - start_time)
             self.status = RAN_SUCCESS
@@ -126,6 +124,26 @@ class AcquireImage(Step):
         input_widget.setLayout(layout)
 
         return input_widget
+
+    def index_changed(self, index):
+        self.output_image_index = index
+
+    def display_outputs(self):
+        output_widget = QWidget()
+        combo = QComboBox()
+        # populate list of available images
+        for i, image in enumerate(self.images):
+            combo.addItem('Image: {}'.format(i))
+        # connect combo box methods
+        combo.currentIndexChanged.connect(self.index_changed)
+        combo.setCurrentIndex(self.output_image_index)
+        # layout settings
+        layout = QFormLayout()
+        layout.addRow(QLabel('Output Image'), combo)
+        # layout.addWidget(combo)
+        output_widget.setLayout(layout)
+        return output_widget
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

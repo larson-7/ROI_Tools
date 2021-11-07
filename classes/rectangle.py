@@ -2,6 +2,7 @@ import numpy as np
 from classes.point import Point
 from classes.points import Points, init_args
 import cv2
+from math import isclose
 
 
 
@@ -28,8 +29,9 @@ class Rectangle:
             self.points = points
             self.attributes = RectAttributes()
             if not self.check_is_rectangle():
-                raise TypeError('points do not form a rectangle')
-                exit()
+                pass
+                # raise TypeError('points do not form a rectangle')
+                # exit()
             self.calc_attributes()
 
     def __str__(self):
@@ -88,7 +90,7 @@ class Rectangle:
     def check_is_rectangle(self):
         @init_args
         def is_orthogonal(a: Point, b: Point, c: Point):
-            return (b.x - a.x) * (b.x - c.x) + (b.y - a.y) * (b.y - c.y) == 0
+            return isclose((b.x - a.x) * (b.x - c.x) + (b.y - a.y) * (b.y - c.y), 0, abs_tol=1e-3)
 
         return is_orthogonal(self.points[3], self.points[0], self.points[1]) and \
                is_orthogonal(self.points[0], self.points[1], self.points[2]) and \

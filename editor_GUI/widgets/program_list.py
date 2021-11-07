@@ -198,7 +198,7 @@ class ProgramList(QWidget):
             active_step = self.model.step_list[index]
             active_step.execute()
             # set main window view to step object's image
-            self.image_viewer.setImage(active_step.image)
+            self.image_viewer.setImage(active_step.display_image)
 
             # update step list icons
             self.model.layoutChanged.emit()
@@ -244,9 +244,13 @@ class ProgramList(QWidget):
         index = self.program_list.currentIndex().row()
         # Focus on new item added
         # step = self.model.index(index).data()
-        step = self.model.step_list[index]
-        self.config_tabs.step = step
-        self.config_tabs.update_tabs()
+        if len(self.model.step_list) > 0:
+            step = self.model.step_list[index]
+            self.config_tabs.step = step
+            self.config_tabs.update_tabs()
+        else:
+            self.config_tabs.step = blank_step
+            self.config_tabs.update_tabs()
 
 
 def create_class_by_name(class_name, class_list, json=None):

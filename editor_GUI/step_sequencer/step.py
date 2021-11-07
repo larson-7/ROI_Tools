@@ -1,6 +1,7 @@
 import sys
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel,QGridLayout
+import numpy as np
 
 UNCONFIGURED = 0
 CONFIGURED = 1
@@ -12,6 +13,13 @@ class Step:
     # list to create track of all instantiated objects
     instances = []
     instance_count = 0
+    height = 1920
+    width = 1080
+    display_image = np.ones((height, width), dtype=np.uint8)
+    images = []
+    for i in range(5):
+        images.append(display_image.copy())
+    # images = [display_image.copy() for x in range(5)]
 
     def __init__(self, json=None):
 
@@ -30,7 +38,8 @@ class Step:
                 self.name = json['type'] + str(self.instance_count)
 
         self.status = UNCONFIGURED
-        self.image = None
+        self.input_image_index = 0
+        self.output_image_index = 0
 
     def execute(self, commands, counter):
         pass

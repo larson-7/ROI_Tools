@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import os
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QTextEdit, QFileDialog, QVBoxLayout, QComboBox,\
+    QFormLayout, QGroupBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 
@@ -29,7 +30,6 @@ class TextEdit(QTextEdit):
         file_name = file_browser.getOpenFileName(self, 'Open Image File', r"<Default dir>", file_types)
         return file_name[0]
 
-
     def mouseReleaseEvent(self, event):
         dialog_filepath = self.file_browser()
         if dialog_filepath != '':
@@ -48,7 +48,6 @@ class LoadImageFromFile(Step):
     def __init__(self, json=None):
         super().__init__(json)
         # maybe not needed now
-        self.image = None
         self.status = 0
 
         # required parameters
@@ -60,14 +59,15 @@ class LoadImageFromFile(Step):
 
     def execute(self, commands=None, counter=None):
         try:
-            self.image = cv2.imread(self.filepath)
+            self.__class__.images[self.output_image_index] = cv2.imread(self.filepath)
+            self.__class__.display_image = self.images[self.output_image_index]
             self.status = RAN_SUCCESS
         except (FileExistsError, FileNotFoundError):
             self.status = RAN_FAILED
 
     def print(self):
-        if self.image:
-            h, w, bpp = np.shape(self.image)
+        if self.__class__.images[self.output_image_index] :
+            h, w, bpp = np.shape(self.__class__.images[self.output_image_index])
             # print image properties.
             print('image properties - Width:{0}, Height:{1}'.format(h, w))
 
@@ -91,17 +91,34 @@ class LoadImageFromFile(Step):
         file_path = TextEdit(self)
         file_path.setWindowTitle("Image Filepath")
         file_path.selectionChanged.connect(self.is_valid)
+        file_path.setMaximumHeight(100)
         if self.filepath:
             file_path.setText(self.filepath)
-        # grid layout settings
-        # layout = QGridLayout()
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel('File Path'))
-        layout.addWidget(file_path)
-        input_widget.setLayout(layout)
 
+        #layout settings
+        layout = QFormLayout()
+        layout.addRow(QLabel('File Path'), file_path)
+        input_widget.setLayout(layout)
         return input_widget
 
+    def index_changed(self, index):
+        self.output_image_index = index
+
+    def display_outputs(self):
+        output_widget = QWidget()
+        combo = QComboBox()
+        # populate list of available images
+        for i, image in enumerate(self.images):
+            combo.addItem('Image: {}'.format(i))
+        # connect combo box methods
+        combo.currentIndexChanged.connect(self.index_changed)
+        combo.setCurrentIndex(self.output_image_index)
+        #layout settings
+        layout = QFormLayout()
+        layout.addRow(QLabel('Output Image'), combo)
+        # layout.addWidget(combo)
+        output_widget.setLayout(layout)
+        return output_widget
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

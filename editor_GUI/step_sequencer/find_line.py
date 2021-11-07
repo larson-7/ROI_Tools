@@ -115,10 +115,8 @@ class FindLine(Step):
             if len(self.np_lines) > 0:
                 self.found_line = self.edge_selection()
 
-
-
-
-
+            # cv_line = line_to_plot.cv_format()
+            # cv2.line(line_image, cv_line[0], cv_line[1], (0, 255, 0), 1)
             else:
                 pass
 

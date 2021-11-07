@@ -2,11 +2,11 @@ import numpy as np
 from classes.point import Point
 from classes.points import Points, init_args
 import cv2
-import math
 
 
-class Line:
-    def __init__(self, points: np.ndarray = None, start_point: Point = None, end_point: Point = Point):
+class Line(np.ndarray):
+    @init_args
+    def __init__(cls, list_of_points):
         self.points = Points(np.zeros((2, 2)))
         self.center = Point([0, 0])
         self.length = 0
@@ -43,7 +43,7 @@ class Line:
         # Calc line attributes after either defining points or start and end point
         self.calc_attributes()
 
-    def __repr__(self):
+    def __str__(self):
         return 'Line: (Start Point {0}, Center Point {1}, End Point {2})'\
             .format(self.points[0], self.center, self.points[1])
 
@@ -89,11 +89,9 @@ class Line:
         return rnl * (scale / norm) + self.center, rnr * (scale / norm) + self.center
 
     def get_angle(self):
-
-        dx = self.points[0][0] - self.points[1][0]
-        dy = self.points[0][1] - self.points[1][1]
-        return math.atan2(dy, dx)
-        # return math.atan((dy/dx))
+        dx = self.points[1][0] - self.points[0][0]
+        dy = self.points[1][1] - self.points[0][1]
+        return np.arctan(dy/dx)
 
     @property
     def start(self):
