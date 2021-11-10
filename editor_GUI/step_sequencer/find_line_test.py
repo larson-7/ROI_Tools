@@ -113,7 +113,6 @@ if __name__ == "__main__":
     # Output "lines" is an array containing endpoints of detected line segments
     lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                         min_line_length, max_line_gap)
-
     # create list of Line objects
     np_lines = [Line(x) for x in lines]
     # plot all lines in red
@@ -222,8 +221,8 @@ if __name__ == "__main__":
             line_to_plot = np_lines[search_idx]
             start, end = line_to_plot.cv_format()
         cv2.line(line_image, start, end, (0, 255, 0), 1)
-
-        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, cropped_ROI.attributes.center)
+        relative_center = np.array([cropped_ROI.width//2, cropped_ROI.height//2])
+        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, relative_center)
         translate = Points.translate(rotated, cropped_ROI.tl)
         # center_offset = (crop_center - line_to_plot.center)
         # translate_to_center = Points.translate(line_to_plot.points, center_offset)

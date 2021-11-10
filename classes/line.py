@@ -24,14 +24,18 @@ class Line:
             elif len(points.shape) == 1 and points.shape[0] == 4:
                 self.points[0] = points[:2]
                 self.points[1] = points[2:4]
-            # 1x4 numpy array
+            # 4x1 numpy array
             elif points.shape[0] == 4 and points.shape[1] == 1:
                 self.points[0] = points[:2, 0]
                 self.points[1] = points[2:4, 0]
+
             # 1x4 numpy array
             elif points.shape[0] == 1 and points.shape[1] == 4:
                 self.points[0] = points[0, :2]
                 self.points[1] = points[0, 2:4]
+                print('before sort: ', points)
+                self.points = self.points[self.points[:, 1].argsort()[::-1]]
+                print('after sort: ', points)
             # if there are more than 2 points, do a best fit line
             elif points.shape[0] > 2 and points.shape[1] == 2:
                 self.points = self.best_fit_line(points)
