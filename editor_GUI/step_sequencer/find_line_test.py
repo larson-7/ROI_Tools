@@ -85,8 +85,9 @@ if __name__ == "__main__":
     time.sleep(0.5)
     start_time = time.time()
     img2, cropped_ROI = crop_rotated_rectangle(image, roi_rect.rectangle)
+    cropped_ROI.plot(roi_rect.image)
     cv2.namedWindow('output')
-    cv2.imshow('rotated rect', img2)
+    # cv2.imshow('rotated rect', img2)
 
     # convert to grayscale and blur
     gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -220,10 +221,22 @@ if __name__ == "__main__":
                     search_idx = i
             line_to_plot = np_lines[search_idx]
             start, end = line_to_plot.cv_format()
+        '''
         cv2.line(line_image, start, end, (0, 255, 0), 1)
         relative_center = np.array([cropped_ROI.width//2, cropped_ROI.height//2])
         rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, relative_center)
+        relative_center += cropped_ROI.tl
+        cv2.circle(roi_rect.image, (int(relative_center[0]), int(relative_center[1])), 5, (0, 255, 0))
         translate = Points.translate(rotated, cropped_ROI.tl)
+        '''
+
+        cv2.line(line_image, start, end, (0, 255, 0), 1)
+        relative_center = np.array([cropped_ROI.width // 2, cropped_ROI.height // 2])
+        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, relative_center)
+        # relative_center += cropped_ROI.tl
+        cv2.circle(roi_rect.image, (int(relative_center[0]), int(relative_center[1])), 5, (0, 255, 0))
+        translate = Points.translate(rotated, cropped_ROI.tl)
+
         # center_offset = (crop_center - line_to_plot.center)
         # translate_to_center = Points.translate(line_to_plot.points, center_offset)
         # rotated = Points.rotate(translate_to_center, roi_rect.rectangle.attributes.rotation, crop_center)
@@ -237,10 +250,11 @@ if __name__ == "__main__":
         translate_end = tuple(translate[1])
         # plot selected line
         # cv_line = line_to_plot.cv_format()
-        cv2.line(image, translate_start, translate_end, (0, 255, 0), 3)
+        # cv2.line(image, translate_start, translate_end, (0, 255, 0), 3)
+        cv2.line(roi_rect.image, translate_start, translate_end, (0, 255, 0), 3)
         # cv2.putText(line_image, 'Line: {}'.format(i), line_to_plot.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
         #             (0, 255, 0), 1, cv2.LINE_AA)
-        cv2.imshow(wName, image)
+        cv2.imshow(wName, roi_rect.image)
 
         # Draw the lines on the  image
         lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)

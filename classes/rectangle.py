@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from classes.point import Point
 from classes.points import Points, init_args
@@ -33,6 +35,9 @@ class Rectangle:
                 # raise TypeError('points do not form a rectangle')
                 # exit()
             self.calc_attributes()
+            dy = self.points[0][1] - self.points[1][1]
+            dx = self.points[0][0] - self.points[1][0]
+            self.attributes.rotation = math.atan(dy / dx)
 
     def __str__(self):
         return 'Points(Top Left {0}, Top Right {1}, Bottom Right {2}, Bottom Left {3})'\

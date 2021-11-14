@@ -89,6 +89,7 @@ def image_rotate_without_crop(mat, angle):
     # TODO: Need to define translation offset to help move back to correct position. the TL of ROI != the crop rect TL
     rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
     rotated_rect = Rectangle(rect_attributes=RectAttributes([image_center[0], image_center[1]], bound_w, bound_h, np.deg2rad(angle)))
+
     # return rotated_mat, image_center
     return rotated_mat, rotated_rect
 
@@ -130,8 +131,6 @@ def crop_rotated_rectangle(image, rect):
 
     rect_width = int(rect.attributes.width)
     rect_height = int(rect.attributes.height)
-
-
     crop_center = (rotated_rect_bbx_upright_image.shape[1] // 2, rotated_rect_bbx_upright_image.shape[0] // 2)
 
     return rotated_rect_bbx_upright_image[
