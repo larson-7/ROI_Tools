@@ -38,7 +38,7 @@ if __name__ == "__main__":
     if load_img:
         weld_img = cv2.imread(image_filepath)
 
-        scale_percent = 40 # percent of original size
+        scale_percent = 100 # percent of original size
         width = int(weld_img.shape[1] * scale_percent / 100)
         height = int(weld_img.shape[0] * scale_percent / 100)
         dim = (width, height)
@@ -113,7 +113,6 @@ if __name__ == "__main__":
     # plot all lines in red
     for i, line in enumerate(np_lines):
         cv_line = line.cv_format()
-        print(f'{i=}', f'{line=}')
         cv2.line(line_image, cv_line[0], cv_line[1], (0, 0, 255), 1)
         cv2.putText(line_image, 'Line: {}'.format(i), line.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, .4, (0, 0, 255),
                     1, cv2.LINE_AA)
@@ -134,10 +133,8 @@ if __name__ == "__main__":
         for i, line in enumerate(np_lines):
             line_angle = np.rad2deg((line.get_angle())) - 90     # degrees
             if -angle_threshold < line_angle < angle_threshold:
-                print('keep index {}'.format(i), line_angle)
                 pass
             else:
-                print('delete index {}'.format(i), line_angle)
                 del_index.append(i)
         # create new array of in range values
         filtered_np_lines = [x for i, x in enumerate(np_lines) if i not in del_index]
