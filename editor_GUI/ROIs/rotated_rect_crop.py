@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from classes.rectangle import Rectangle, RectAttributes
-from classes.points import Points
 
 
 def inside_rect(rect, num_cols, num_rows):
@@ -86,12 +85,10 @@ def image_rotate_without_crop(mat, angle):
 
     rotation_mat[0, 2] += bound_w / 2 - image_center[0]
     rotation_mat[1, 2] += bound_h / 2 - image_center[1]
-    # TODO: Need to define translation offset to help move back to correct position. the TL of ROI != the crop rect TL
-    rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
-    rotated_rect = Rectangle(rect_attributes=RectAttributes([image_center[0], image_center[1]], bound_w, bound_h, np.deg2rad(angle)))
 
-    # return rotated_mat, image_center
-    return rotated_mat, rotated_rect
+    rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
+
+    return rotated_mat
 
 
 def crop_rectangle(image, rect):
@@ -126,8 +123,7 @@ def crop_rotated_rectangle(image, rect):
 
     rect_bbx_upright = rect_bbx(rect=rect)
     rect_bbx_upright_image = crop_rectangle(image=image, rect=rect_bbx_upright)
-    rotated_rect_bbx_upright_image, bounding_rect = image_rotate_without_crop(mat=rect_bbx_upright_image, angle=rotated_angle)
-    global_bounding_box = Rectangle(points=Points.translate(bounding_rect.points, rect.tl))
+    rotated_rect_bbx_upright_image = image_rotate_without_crop(mat=rect_bbx_upright_image, angle=rotated_angle)
 
     rect_width = int(rect.attributes.width)
     rect_height = int(rect.attributes.height)
@@ -135,4 +131,4 @@ def crop_rotated_rectangle(image, rect):
 
     return rotated_rect_bbx_upright_image[
            crop_center[1] - rect_height // 2: crop_center[1] + (rect_height - rect_height // 2),
-           crop_center[0] - rect_width // 2: crop_center[0] + (rect_width - rect_width // 2)], global_bounding_box
+           crop_center[0] - rect_width // 2: crop_center[0] + (rect_width - rect_width // 2)]

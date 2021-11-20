@@ -81,13 +81,9 @@ if __name__ == "__main__":
         if roi_rect.return_flag:
             break
 
-    # cv2.destroyWindow(wName)
     time.sleep(0.5)
     start_time = time.time()
-    img2, cropped_ROI = crop_rotated_rectangle(image, roi_rect.rectangle)
-    cropped_ROI.plot(roi_rect.image)
-    cv2.namedWindow('output')
-    # cv2.imshow('rotated rect', img2)
+    img2 = crop_rotated_rectangle(image, roi_rect.rectangle)
 
     # convert to grayscale and blur
     gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -108,8 +104,6 @@ if __name__ == "__main__":
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
     line_image = np.copy(img2) * 0  # creating a blank to draw lines on
 
-    # lines = cv2.HoughLines(edges, rho, theta, threshold)
-
     # Run Hough on edge detected image
     # Output "lines" is an array containing endpoints of detected line segments
     lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
@@ -126,7 +120,7 @@ if __name__ == "__main__":
 
     # Draw the lines on the  image
     lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
-    cv2.imshow('output', lines_edges)
+    # cv2.imshow('output', lines_edges)
     del_index = []
     # TODO Functionize all line threshold tools, allow for plotting or not and enable debugging or not
     if len(np_lines) > 0:
@@ -221,47 +215,26 @@ if __name__ == "__main__":
                     search_idx = i
             line_to_plot = np_lines[search_idx]
             start, end = line_to_plot.cv_format()
-        '''
-        cv2.line(line_image, start, end, (0, 255, 0), 1)
-        relative_center = np.array([cropped_ROI.width//2, cropped_ROI.height//2])
-        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, relative_center)
-        relative_center += cropped_ROI.tl
-        cv2.circle(roi_rect.image, (int(relative_center[0]), int(relative_center[1])), 5, (0, 255, 0))
-        translate = Points.translate(rotated, cropped_ROI.tl)
-        '''
 
-        cv2.line(line_image, start, end, (0, 255, 0), 1)
-        relative_center = np.array([cropped_ROI.width // 2, cropped_ROI.height // 2])
-        rotated = Points.rotate(line_to_plot.points, roi_rect.rectangle.attributes.rotation, relative_center)
-        # relative_center += cropped_ROI.tl
-        cv2.circle(roi_rect.image, (int(relative_center[0]), int(relative_center[1])), 5, (0, 255, 0))
-        translate = Points.translate(rotated, cropped_ROI.tl)
+        # get relative center of selected ROI
+        relative_center = np.array([roi_rect.rectangle.width // 2, roi_rect.rectangle.height // 2])
+        # translate found line relative to center of ROI instead of TL corner
+        translated_line = Points.translate(line_to_plot.points, -relative_center)
+        # rotate found line relative to 0,0
+        rotated = Points.rotate(translated_line, roi_rect.rectangle.attributes.rotation)
+        # translate found line to absoulute cs, roi center
+        translate = Points.translate(rotated, roi_rect.rectangle.center)
 
-        # center_offset = (crop_center - line_to_plot.center)
-        # translate_to_center = Points.translate(line_to_plot.points, center_offset)
-        # rotated = Points.rotate(translate_to_center, roi_rect.rectangle.attributes.rotation, crop_center)
-        # translate_to_center = Points.translate(rotated, -center_offset)
-        # translate = Points.translate(translate_to_center, crop_center.tl)
-
-        # translate = line_to_plot.points.translate(line_to_plot.points, roi_rect.rectangle.tl)
-        # rotated = Points.rotate(translate, -roi_rect.rectangle.attributes.rotation, crop_center)
+        # plot line
         translate = translate.astype(int)
         translate_start = tuple(translate[0])
         translate_end = tuple(translate[1])
-        # plot selected line
-        # cv_line = line_to_plot.cv_format()
-        # cv2.line(image, translate_start, translate_end, (0, 255, 0), 3)
         cv2.line(roi_rect.image, translate_start, translate_end, (0, 255, 0), 3)
-        # cv2.putText(line_image, 'Line: {}'.format(i), line_to_plot.start.cv_format(), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-        #             (0, 255, 0), 1, cv2.LINE_AA)
         cv2.imshow(wName, roi_rect.image)
 
-        # Draw the lines on the  image
-        lines_edges = cv2.addWeighted(img2, 0.5, line_image, 1, 0)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f'{elapsed_time=}')
-        cv2.imshow('output', lines_edges)
 
         while True:
             key = cv2.waitKey(1) & 0xFF
